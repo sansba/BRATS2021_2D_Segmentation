@@ -92,8 +92,8 @@ def create_nii_slices(path, to):
 
 #Read images path as a list > OK
 def read_data_paths(main_path):
-    flairs_path = os.path.join(main_path, "*", "*_flair", "*.png")
-    segs_path = os.path.join(main_path, "*", "*_seg", "*.png")
+    flairs_path = os.path.join(main_path, "data", "*", "data", "*_flair", "*.png")
+    segs_path = os.path.join(main_path, "data", "*", "data", "*_seg", "*.png")
 
     data_list = []
     for flair_path, seg_path in zip(glob.glob(flairs_path), glob.glob(segs_path)):
