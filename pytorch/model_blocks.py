@@ -3,14 +3,17 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-
-
 """ BASIC UNET BLOCKS"""
 #Double Conv
 class DoubleConv(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super().__init__()
-        self.conv = nn.Sequential(nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=3 ,padding="same"), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True),
+        """Double Convolution for Basic UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the first convolution layer.
+           - out_ch (int): output channel of the first and second convolution layer and input channel of the second convolution layer.
+        """
+        super(DoubleConv, self).__init__()
+        self.conv = nn.Sequential(nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=3, padding="same"), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True),
                         nn.Conv2d(in_channels=out_ch, out_channels=out_ch, kernel_size=3, padding="same"), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True))
 
     def forward(self, x):
@@ -20,7 +23,12 @@ class DoubleConv(nn.Module):
 #Input Conv
 class InConv(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super().__init__()
+        """Input Convolution Layer for Basic UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the first convolution layer.
+           - out_ch (int): output channel of the first and second convolution layer and input channel of the second convolution layer.
+        """
+        super(InConv, self).__init__()
         self.conv = DoubleConv(in_ch, out_ch)
 
     def forward(self, x):
@@ -30,7 +38,12 @@ class InConv(nn.Module):
 #Down Sampling
 class Down(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super().__init__()
+        """Down Sampling Layer for Basic UNet Model. \n
+           Args:
+           - in_ch (int): input channel of first convolution layer.
+           - out_ch (int): output channel of the first and second convolution layer and input channel of the second convolution layer.
+        """
+        super(Down, self).__init__()
         self.down = nn.Sequential(nn.MaxPool2d(2, 2), DoubleConv(in_ch, out_ch))
 
     def forward(self, x):
@@ -40,7 +53,12 @@ class Down(nn.Module):
 #Up Sampling
 class Up(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super().__init__()
+        """Up Sampling Layer for Basic UNet Model. \n
+           Args:
+           - in_ch (int): input channel of first convolution layer.
+           - out_ch (int): output channel of the first and second convolution layer and input channel of the second convolution layer.
+        """
+        super(Up, self).__init__()
         self.up = nn.ConvTranspose2d(in_channels=in_ch, out_channels=in_ch // 2, kernel_size=2, stride=2)
         self.conv = DoubleConv(in_ch, out_ch)
 
@@ -61,7 +79,12 @@ class Up(nn.Module):
 #Out Conv
 class OutConv(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super().__init__()
+        """Out Convolution Layer for Basic UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the convolution layer.
+           - out_ch (int): output channel of the convolution layer.
+        """
+        super(OutConv, self).__init__()
         self.conv = nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=1)
 
     def forward(self, x):
@@ -75,7 +98,12 @@ class OutConv(nn.Module):
 #Inception Block
 class InceptionBlock(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super().__init__()
+        """Inception Block for Inception UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the convolution layer.
+           - out_ch (int): output channel of the convolution layer.
+        """
+        super(InceptionBlock, self).__init__()
         self.x1 = nn.Sequential(nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=3, padding="same", dilation=1), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True))
         self.x2 = nn.Sequential(nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=3, padding="same", dilation=2), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True))
         self.x3 = nn.Sequential(nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=3, padding="same", dilation=3), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True))
@@ -93,7 +121,12 @@ class InceptionBlock(nn.Module):
 #Double Conv
 class IncDoubleConv(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super().__init__()
+        """Double Inception Convolution for Inception UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the first convolution layer.
+           - out_ch (int): output channel of the first and second convolution layer and input channel of the second convolution layer.
+        """
+        super(IncDoubleConv, self).__init__()
         self.conv = nn.Sequential(InceptionBlock(in_ch, out_ch // 4), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True),
                                 InceptionBlock(out_ch, out_ch // 4), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True))
 
@@ -104,7 +137,12 @@ class IncDoubleConv(nn.Module):
 #Input Convolution
 class IncInConv(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super().__init__()
+        """Input Convolution Layer for Inception UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the convolution layer.
+           - out_ch (int): output channel of the first and second convolution layer and input channel of the second convolution layer.
+        """
+        super(IncInConv, self).__init__()
         self.conv = IncDoubleConv(in_ch, out_ch)
     
     def forward(self, x):
@@ -114,7 +152,12 @@ class IncInConv(nn.Module):
 #Down Sampling
 class IncDown(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super().__init__()
+        """Down Sampling Layer for Inception UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the convolution layer.
+           - out_ch (int): output channel of the first and second convolution layer and input channel of the second convolution layer.
+        """
+        super(IncDown, self).__init__()
         self.down = nn.Sequential(nn.MaxPool2d(2, 2), IncDoubleConv(in_ch, out_ch))
 
     def forward(self, x):
@@ -124,7 +167,12 @@ class IncDown(nn.Module):
 #Up Sampling
 class IncUp(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super().__init__()
+        """Up Sampling Layer for Inception UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the convolution layer.
+           - out_ch (int): output channel of the first and second convolution layer and input channel of the second convolution layer.
+        """
+        super(IncUp, self).__init__()
         self.up = nn.ConvTranspose2d(in_channels=in_ch, out_channels=in_ch // 2, kernel_size=2, stride=2)
         self.conv = IncDoubleConv(in_ch, out_ch)
 
@@ -144,7 +192,12 @@ class IncUp(nn.Module):
 #Out Convolution
 class IncOutConv(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super().__init__()
+        """Output Convolution Layer for Inception UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the convolution layer.
+           - out_ch (int): output channel of the convolution layer.
+        """
+        super(IncOutConv, self).__init__()
         self.conv = nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=1)
         
     def forward(self, x):
@@ -157,7 +210,12 @@ class IncOutConv(nn.Module):
 #Arrow Block
 class ArrowBlock(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super().__init__()
+        """Arrow Block for Arrow UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the convolution layer.
+           - out_ch (int): output channel of the convolution layer.
+        """
+        super(ArrowBlock, self).__init__()
         channels = out_ch // 7
 
         self.x1 = nn.Sequential(nn.Conv2d(in_channels=in_ch, out_channels=channels, kernel_size=3, padding="same"), nn.BatchNorm2d(channels), nn.ReLU(inplace=True))
@@ -187,7 +245,12 @@ class ArrowBlock(nn.Module):
 #Input Convolution
 class ArrInConv(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super().__init__()
+        """Input Convolution Layer for Arrow UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the convolution layer.
+           - out_ch (int): output channel of the convolution layer.
+        """
+        super(ArrInConv, self).__init__()
         self.conv = ArrowBlock(in_ch, out_ch)
 
     def forward(self, x):
@@ -197,7 +260,12 @@ class ArrInConv(nn.Module):
 #Down Sampling
 class ArrDown(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super().__init__()
+        """Down Sampling  Layer for Arrow UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the convolution layer.
+           - out_ch (int): output channel of the convolution layer.
+        """
+        super(ArrDown, self).__init__()
         self.down = nn.Sequential(nn.MaxPool2d(2, 2), ArrowBlock(in_ch, out_ch))
 
     def forward(self, x):
@@ -207,7 +275,12 @@ class ArrDown(nn.Module):
 #Up Sampling
 class ArrUp(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super().__init__()
+        """Up Sampling Layer for Arrow UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the convolution layer.
+           - out_ch (int): output channel of the convolution layer.
+        """
+        super(ArrUp, self).__init__()
         self.up = nn.ConvTranspose2d(in_channels=in_ch, out_channels=in_ch // 2, kernel_size=2, stride=2)
         self.conv = ArrowBlock(in_ch, out_ch)
 
@@ -228,7 +301,12 @@ class ArrUp(nn.Module):
 #Out Convolution
 class ArrOutConv(nn.Module):
     def __init__(self, in_ch, out_ch):
-        super().__init__()
+        """Input Convolution Layer for Arrow UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the convolution layer.
+           - out_ch (int): output channel of the convolution layer.
+        """
+        super(ArrOutConv, self).__init__()
         self.conv = nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=1)
 
     def forward(self, x):
