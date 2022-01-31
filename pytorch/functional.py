@@ -19,7 +19,7 @@ def train_epoch(train_loader, accumulator, model, optimizer, criterions, metrics
     """
     model.train()
     accumulator.reset()
-    
+
     for image, label in tqdm(train_loader):
         image = image.to(config.DEVICE)
         label = label.to(config.DEVICE)
@@ -29,7 +29,7 @@ def train_epoch(train_loader, accumulator, model, optimizer, criterions, metrics
         for i, loss in enumerate(criterions):
             l = loss(prediction, label)
             losses += l
-            accumulator.add_losses(l.item(), i)
+            accumulator.add_losses(l, i)
         losses = losses / len(criterions)
         
         for i, metric in enumerate(metrics):
@@ -61,7 +61,7 @@ def validate_epoch(val_loader, accumulator, model, criterions, metrics):
             prediction = model(image)
 
         for i, loss in enumerate(criterions):
-            accumulator.add_losses(loss(prediction, label).item(), i)
+            accumulator.add_losses(loss(prediction, label), i)
         
         for i, metric in enumerate(metrics):
             accumulator.add_metrics(metric(prediction, label), i)
@@ -114,7 +114,7 @@ def predict_test(test_loader, accumulator, model, criterions, metrics, path=None
         for image, label in test_loader:
             image = image.to(config.DEVICE)
             label = label.to(config.DEVICE)
-            prediction = model(image).to(config.DEVICE)
+            prediction = model(image)
 
         for i, loss in enumerate(criterions):
             accumulator.add_losses(loss(prediction, label), i)
@@ -202,11 +202,11 @@ class Accumulator:
 
     #Add Losses
     def add_losses(self, criterion_score, index):
-        self.criterion_scores[index] += criterion_score
+        self.criterion_scores[index] += criterion_score.item()
 
     #Add Metrics
     def add_metrics(self, metric_score, index):
-        self.metric_scores[index] += metric_score
+        self.metric_scores[index] += metric_score.item()
 
     #Reset
     def reset(self):
