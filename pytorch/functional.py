@@ -197,12 +197,12 @@ class Accumulator:
         self.metric_names = self.get_names(metrics)
 
     #Add Losses
-    def add_losses(self, criterion_scores, index):
-        self.criterion_scores[index] += criterion_scores[index]
+    def add_losses(self, criterion_score, index):
+        self.criterion_scores[index] += criterion_score
 
     #Add Metrics
-    def add_metrics(self, metric_scores, index):
-        self.metric_scores[index] += metric_scores[index]
+    def add_metrics(self, metric_score, index):
+        self.metric_scores[index] += metric_score
 
     #Reset
     def reset(self):
