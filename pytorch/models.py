@@ -1,5 +1,6 @@
 import torch.nn as nn
 from torchsummary import summary
+import config
 
 from model_blocks import *
 import functional
@@ -157,7 +158,7 @@ class SegmentationModels:
 
         self.in_ch = in_ch
         self.n_classes = n_classes
-        self.model = self.models[model_name.lower()](self.in_ch, self.n_classes)
+        self.model = self.models[model_name.lower()](self.in_ch, self.n_classes).to(config.DEVICE)
 
 
         self.train_loader = None
