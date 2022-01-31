@@ -12,14 +12,10 @@ INPUT_CHANNELS = 1
 NUM_CLASSES = 4
 
 #Training number of epoch and batch size
-NUM_EPOCHES = 30
+NUM_EPOCHES = 15
 BATCH_SIZE = 32
 
 #Image size
-INPUT_IMAGE_HEIGHT = 240
-INPUT_IMAGE_WIDTH = 240
-
-#Encoder-Decoder Channels
-CHANNELS = [64, 128, 256, 512, 1024]
+INPUT_SIZE = 160
 
 LR = 0.001

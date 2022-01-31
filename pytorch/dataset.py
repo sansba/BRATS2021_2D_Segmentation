@@ -1,4 +1,5 @@
 import torch
+from torchvision import transforms
 from torch.utils import data
 from sklearn.model_selection import train_test_split
 
@@ -53,7 +54,7 @@ def train_val_test_split(dataset, test_val_split=0.15):
 
 #BRATS DATASET
 class BratsDataset(data.Dataset):
-    def __init__(self, main_path, n_data, transforms=None):
+    def __init__(self, main_path, n_data, transforms=transforms.CenterCrop(160)):
         """Creates brats dataset for segmentation tasks. \n
             Args:
                 - main_path (str): path to the datas.

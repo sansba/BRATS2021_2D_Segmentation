@@ -53,7 +53,7 @@ class EarlyStopping:
         else:
             self.previous_loss = val_loss
             self.counter += 1
-            print(f"EarlyStopping counter: {self.counter} out of {self.patience}")
+            print(f"({self.__class__.__name__}):", f"EarlyStopping counter: {self.counter} out of {self.patience}")
             if self.counter >= self.patience:
                 raise EarlyException
         
@@ -67,7 +67,7 @@ class EarlyStopping:
                 - model: segmentation model.
         """
         if self.verbose:
-            print(f"Validation loss decreased ({self.val_loss_min} --> {val_loss}).  Saving model...")
+            print(f"({self.__class__.__name__}):", f"Validation loss decreased ({self.val_loss_min} --> {val_loss}).  Saving model...")
         torch.save(model.state_dict(), self.path)
         self.val_loss_min = val_loss
 
@@ -102,6 +102,6 @@ class SaveBestModel():
                 - model: segmentation model.
         """
         if self.verbose:
-            print("Model has been saved.")
+            print(f"({self.__class__.__name__}):", "Best Model has been saved.")
         self.val_min_loss = val_loss
         torch.save(model.state_dict(), self.path)

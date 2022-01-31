@@ -234,9 +234,15 @@ class SegmentationModels:
     def print(self):
         message_train = "TRAINING: "
         message_val = "VALIDATION: "
-        for i, name in enumerate(self.train_accum.criterion_names):
-            message_train += f"{name}: " + f"{self.train_accum.criterion_scores[i].float()}\t"
-            message_val += f"{name}: " + f"{self.val_accum.criterion_scores[i].float()}\t"
+
+        for name, train_score, val_score in zip(self.train_accum.criterion_names, self.train_accum.criterion_scores, self.val_accum.criterion_scores):
+            message_train += f"{name}: {train_score} \t"
+            message_val += f"{name}: {val_score} \t"
+
+        for name, train_score, val_score in zip(self.train_accum.metric_names, self.train_accum.metric_scores, self.val_accum.metric_scores):
+            message_train += f"{name}: {train_score} \t"
+            message_val += f"{name}: {val_score} \t"
+
 
         print(message_train, message_val, sep="\n")
 

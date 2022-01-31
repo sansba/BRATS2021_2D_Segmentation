@@ -19,6 +19,7 @@ def train_epoch(train_loader, accumulator, model, optimizer, criterions, metrics
     """
     model.train()
     accumulator.reset()
+    iter_counter = 0
 
     for image, label in tqdm(train_loader):
         image = image.to(config.DEVICE)
@@ -39,6 +40,17 @@ def train_epoch(train_loader, accumulator, model, optimizer, criterions, metrics
         losses.backward()
         optimizer.step()
 
+        iter_counter += 1
+
+    accumulator.criterion_scores /= iter_counter
+    accumulator.metric_scores /= iter_counter
+
+    for i, criterion in enumerate(accumulator.criterion_scores):
+        accumulator.all_losses[i].append(criterion)
+
+    for i, metric in enumerate(accumulator.metric_scores):
+        accumulator.all_metrics[i].append(metric)
+
 
 
 #Validate Epoch
@@ -53,6 +65,7 @@ def validate_epoch(val_loader, accumulator, model, criterions, metrics):
     """
     model.eval()
     accumulator.reset()
+    iter_counter = 0
 
     for image, label in val_loader:
         with torch.no_grad():
@@ -65,6 +78,17 @@ def validate_epoch(val_loader, accumulator, model, criterions, metrics):
         
         for i, metric in enumerate(metrics):
             accumulator.add_metrics(metric(prediction, label), i)
+
+        iter_counter += 1
+
+    accumulator.criterion_scores /= iter_counter
+    accumulator.metric_scores /= iter_counter
+
+    for i, criterion in enumerate(accumulator.criterion_scores):
+        accumulator.all_losses[i].append(criterion)
+
+    for i, metric in enumerate(accumulator.metric_scores):
+        accumulator.all_metrics[i].append(metric)
 
 
 
@@ -109,6 +133,7 @@ def predict_test(test_loader, accumulator, model, criterions, metrics, path=None
     """
     model.eval()
     accumulator.reset()
+    iter_counter = 0
     
     with torch.no_grad():
         for image, label in test_loader:
@@ -116,11 +141,23 @@ def predict_test(test_loader, accumulator, model, criterions, metrics, path=None
             label = label.to(config.DEVICE)
             prediction = model(image)
 
-        for i, loss in enumerate(criterions):
-            accumulator.add_losses(loss(prediction, label), i)
+            for i, loss in enumerate(criterions):
+                accumulator.add_losses(loss(prediction, label), i)
         
-        for i, metric in enumerate(metrics):
-            accumulator.add_metrics(metric(prediction, label), i)
+            for i, metric in enumerate(metrics):
+                accumulator.add_metrics(metric(prediction, label), i)
+
+                iter_counter += 1
+                
+        accumulator.criterion_scores /= iter_counter
+        accumulator.metric_scores /= iter_counter
+
+        for i, criterion in enumerate(accumulator.criterion_scores):
+            accumulator.all_losses[i].append(criterion)
+
+        for i, metric in enumerate(accumulator.metric_scores):
+            accumulator.all_metrics[i].append(metric)
+        
 
 
 
@@ -199,6 +236,9 @@ class Accumulator:
         self.metric_scores = [0.0] * len(metrics)
         self.criterion_names = self.get_names(criterions)
         self.metric_names = self.get_names(metrics)
+
+        self.all_losses = [[] for _ in range(len(criterions))]
+        self.all_metrics = [[] for _ in range(len(metrics))]
 
     #Add Losses
     def add_losses(self, criterion_score, index):

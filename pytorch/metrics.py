@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 
 
 
@@ -28,7 +29,7 @@ class MeanIOUScore(nn.Module):
 
         iou = (intersections + smooth) / (unions + smooth)
 
-        return iou
+        return iou.item()
 
 
 
@@ -60,9 +61,9 @@ class PrecisionScore(nn.Module):
             FP = (argmax_prediction == i).sum() - TP
 
             precision_score = (TP + smooth) / (TP + FP + smooth)
-            score_list[i] = precision_score
+            score_list[i] = precision_score.item()
 
-        return score_list
+        return np.array(score_list)
 
 
 
@@ -95,9 +96,9 @@ class RecallScore(nn.Module):
             FN = (argmax_prediction == i).sum() - TP
 
             recall_score = (TP + smooth) / (TP + FN + smooth)
-            score_list[i] = recall_score
+            score_list[i] = recall_score.item()
         
-        return score_list
+        return np.array(score_list)
 
 
 
@@ -126,6 +127,6 @@ class FScore(nn.Module):
         
         for i in range(classes):
             f_score = 2 * (recall_score[i] * precision_score[i] + smooth) / (recall_score[i] + precision_score[i] + smooth)
-            score_list[i] = f_score
+            score_list[i] = f_score.item()
         
-        return score_list
+        return np.array(score_list)
