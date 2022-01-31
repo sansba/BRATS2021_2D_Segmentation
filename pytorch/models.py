@@ -198,6 +198,9 @@ class SegmentationModels:
                 >>> model.fit(train_loader, val_loader)
                 >>> model.compile(20, 32, optimizer, criterion)
             """
+        if not hasattr(criterions, "__len__"):
+            criterions = [criterions]
+        
         if not hasattr(metrics, "__len__"):
             metrics = [metrics]
 
