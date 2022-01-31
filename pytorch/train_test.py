@@ -33,7 +33,6 @@ dice_loss = losses.DiceLoss()
 
 #Metric
 iou_score = metrics.MeanIOUScore()
-f_score = metrics.FScore()
 
 #Optimizer
 optimizer = torch.optim.SGD(model.model.parameters(), config.LR)
@@ -46,7 +45,7 @@ best_model = callbacks.SaveBestModel()
 model.fit(train_loader, val_loader)
 
 #Training the model
-model.compile(epochs=config.NUM_EPOCHES, optimizer=optimizer, criterions=[ce_loss, dice_loss], metrics=[iou_score, f_score], callbacks=[early_stop, best_model])
+model.compile(epochs=config.NUM_EPOCHES, optimizer=optimizer, criterions=[ce_loss, dice_loss], metrics=iou_score, callbacks=[early_stop, best_model])
 
 #Testing the model
 #model.predict(test_loader)
