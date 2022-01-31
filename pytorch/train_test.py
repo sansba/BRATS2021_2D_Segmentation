@@ -15,7 +15,7 @@ import callbacks
 
 
 #Data preparation
-datasets = dataset.BratsDataset("brats2021", n_data=5000)
+datasets = dataset.BratsDataset("drive/MyDrive/BRATS2021", n_data=5000)
 datasets = dataset.train_val_test_split(datasets, test_val_split=0.15)
 
 train_loader = DataLoader(datasets["train"].dataset, shuffle=True, batch_size=config.BATCH_SIZE)
