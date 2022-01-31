@@ -19,11 +19,11 @@ def train_epoch(train_loader, accumulator, model, optimizer, criterions, metrics
     """
     model.train()
     accumulator.reset()
-
+    
     for image, label in tqdm(train_loader):
         image = image.to(config.DEVICE)
         label = label.to(config.DEVICE)
-        prediction = model(image)
+        prediction = model(image).to(config.DEVICE)
         
         losses = 0
         for i, loss in enumerate(criterions):
@@ -58,7 +58,7 @@ def validate_epoch(val_loader, accumulator, model, criterions, metrics):
         with torch.no_grad():
             image = image.to(config.DEVICE)
             label = label.to(config.DEVICE)
-            prediction = model(image)
+            prediction = model(image).to(config.DEVICE)
 
         for i, loss in enumerate(criterions):
             accumulator.add_losses(loss(prediction, label), i)
@@ -114,7 +114,7 @@ def predict_test(test_loader, accumulator, model, criterions, metrics, path=None
         for image, label in test_loader:
             image = image.to(config.DEVICE)
             label = label.to(config.DEVICE)
-            prediction = model(image)
+            prediction = model(image).to(config.DEVICE)
 
         for i, loss in enumerate(criterions):
             accumulator.add_losses(loss(prediction, label), i)
