@@ -31,7 +31,7 @@ def train_epoch(train_loader, accumulator, model, optimizer, criterions, metrics
         losses = losses / len(criterions)
         
         for i, metric in enumerate(metrics):
-            accumulator.add_metrics(metric(prediction, label).item(), i)
+            accumulator.add_metrics(metric(prediction, label), i)
 
         optimizer.zero_grad()
         losses.backward()
@@ -57,7 +57,7 @@ def validate_epoch(val_loader, accumulator, model, criterions, metrics):
             prediction = model(image)
 
         for i, loss in enumerate(criterions):
-            accumulator.add_losses(loss(prediction, label), i)
+            accumulator.add_losses(loss(prediction, label).item(), i)
         
         for i, metric in enumerate(metrics):
             accumulator.add_metrics(metric(prediction, label), i)
