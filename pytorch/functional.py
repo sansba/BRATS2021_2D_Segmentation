@@ -21,19 +21,17 @@ def train_epoch(train_loader, accumulator, model, optimizer, criterions, metrics
     accumulator.reset()
     
     for image, label in tqdm(train_loader):
-        image = image
-        label = label
         prediction = model(image)
         
         losses = 0
         for i, loss in enumerate(criterions):
             l = loss(prediction, label)
             losses += l
-            accumulator.add_losses(l, i)
+            accumulator.add_losses(l.item(), i)
         losses = losses / len(criterions)
         
         for i, metric in enumerate(metrics):
-            accumulator.add_metrics(metric(prediction, label), i)
+            accumulator.add_metrics(metric(prediction, label).item(), i)
 
         optimizer.zero_grad()
         losses.backward()
@@ -56,15 +54,13 @@ def validate_epoch(val_loader, accumulator, model, criterions, metrics):
 
     for image, label in val_loader:
         with torch.no_grad():
-            image = image
-            label = label
             prediction = model(image)
 
         for i, loss in enumerate(criterions):
-            accumulator.add_losses(loss(prediction, label), i)
+            accumulator.add_losses(loss(prediction, label).item(), i)
         
         for i, metric in enumerate(metrics):
-            accumulator.add_metrics(metric(prediction, label), i)
+            accumulator.add_metrics(metric(prediction, label).item(), i)
 
 
 
