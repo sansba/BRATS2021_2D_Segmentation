@@ -25,7 +25,7 @@ test_loader = DataLoader(datasets["test"].dataset, shuffle=False, batch_size=con
 
 
 #Model
-model = models.SegmentationModels("unet", 1, 1)
+model = models.SegmentationModels("unet", 1, 4)
 
 #Criterion
 ce_loss = nn.CrossEntropyLoss()
