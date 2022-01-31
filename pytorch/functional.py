@@ -57,10 +57,10 @@ def validate_epoch(val_loader, accumulator, model, criterions, metrics):
             prediction = model(image)
 
         for i, loss in enumerate(criterions):
-            accumulator.add_losses(loss(prediction, label).item(), i)
+            accumulator.add_losses(loss(prediction, label), i)
         
         for i, metric in enumerate(metrics):
-            accumulator.add_metrics(metric(prediction, label).item(), i)
+            accumulator.add_metrics(metric(prediction, label), i)
 
 
 
