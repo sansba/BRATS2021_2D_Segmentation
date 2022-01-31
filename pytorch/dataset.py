@@ -72,9 +72,7 @@ class BratsDataset(data.Dataset):
 
     def __getitem__(self, index):
         img = cv2.imread(self.data_list[index][0], 0)
-        img = cv2.resize(img, (120, 120))
         mask = cv2.imread(self.data_list[index][1], 0)
-        mask = cv2.resize(mask, (120, 120))
         mask[mask == 4] = 3
 
         img = torch.from_numpy(img).unsqueeze(0).float()
