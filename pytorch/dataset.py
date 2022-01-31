@@ -16,8 +16,8 @@ def read_data_paths(main_path, n_data):
             - n_data (int): number of data. \n
                 0: all data
         """
-    flairs_path = os.path.join(main_path, "data", "*", "data", "*_flair", "*.png")
-    segs_path = os.path.join(main_path, "data", "*", "data", "*_seg", "*.png")
+    flairs_path = os.path.join(main_path, "*", "*_flair", "*.png")
+    segs_path = os.path.join(main_path, "*", "*_seg", "*.png")
 
     data_list = []
     for flair_path, seg_path in zip(glob.glob(flairs_path), glob.glob(segs_path)):
@@ -72,7 +72,9 @@ class BratsDataset(data.Dataset):
 
     def __getitem__(self, index):
         img = cv2.imread(self.data_list[index][0], 0)
+        img = cv2.resize(img, (120, 120))
         mask = cv2.imread(self.data_list[index][1], 0)
+        mask = cv2.resize(mask, (120, 120))
         mask[mask == 4] = 3
 
         img = torch.from_numpy(img).unsqueeze(0).float()
