@@ -129,7 +129,7 @@ def train_net(train_loader, val_loader, train_accum, val_accum, model, optimizer
 
 
 #Predict Test
-def predict_test(test_loader, accumulator, model, criterions, metrics, path=None):
+def predict_test(test_loader, accumulator, model, criterions, metrics):
     """Predicts test dataset. \n
         Args:
             - test_loader (DataLoader): test dataset loader.
@@ -141,7 +141,6 @@ def predict_test(test_loader, accumulator, model, criterions, metrics, path=None
     """
     model.eval()
     accumulator.reset()
-    iter_counter = 0
     is_plot = True
     
     with torch.no_grad():
@@ -160,13 +159,6 @@ def predict_test(test_loader, accumulator, model, criterions, metrics, path=None
             for i, metric in enumerate(metrics):
                 accumulator.add_metrics(metric(prediction, label), i)
 
-                iter_counter += 1
-                
-        accumulator.criterion_scores /= iter_counter
-        accumulator.metric_scores /= iter_counter
-
-        accum(accumulator)
-        
 
 
 

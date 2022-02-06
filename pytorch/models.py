@@ -197,7 +197,7 @@ class SegmentationModels:
                 >>> criterion = torch.nn.CrossEntropyLoss()
                 >>> model.fit(train_loader, val_loader)
                 >>> model.compile(20, 32, optimizer, criterion)
-            """
+        """
         if not hasattr(criterions, "__len__"):
             criterions = [criterions]
         
@@ -215,23 +215,25 @@ class SegmentationModels:
         self.train_accum = functional.Accumulator(self.criterions, self.metrics)
         self.val_accum = functional.Accumulator(self.criterions, self.metrics)
 
-        functional.train_net(self.train_loader, self.val_loader, self.train_accum, self.val_accum,  self.model, self.optimizer, self.criterions, self.metrics, self.callbacks, epochs, self.print)
+        functional.train_net(self.train_loader, self.val_loader, self.train_accum, self.val_accum,  self.model, self.optimizer, self.criterions, self.metrics, self.callbacks, epochs, self.training_print)
         
 
     #Predict
-    def predict(self, test_loader, path):
+    def predict(self, test_loader):
         """Predicts test data. \n
             Args:
                 - test_loader (DataLoader): test dataset loader.
                 - path (str): path where predictions will be saved.
         """
         self.test_loader = test_loader
-        self.test_accum = functional.Accumulator(self.criterions)
-        functional.predict_test(self.test_loader, self.test_accum, self.model, self.criterions, self.metrics, path)
+        self.test_accum = functional.Accumulator(self.criterions, self.metrics)
+
+        functional.predict_test(self.test_loader, self.test_accum, self.model, self.criterions, self.metrics)
+        self.test_print()
     
 
-    #Print
-    def print(self):
+    #Training Print
+    def training_print(self):
         message_train = "TRAINING: "
         message_val = "VALIDATION: "
 
@@ -243,8 +245,21 @@ class SegmentationModels:
             message_train += f"{name}: {train_score} \t"
             message_val += f"{name}: {val_score} \t"
 
-
         print(message_train, message_val, sep="\n")
+
+
+    #Test Print
+    def test_print(self):
+        message_test = "TEST: "
+
+        for name, test_score in zip(self.test_accum.criterion_names, self.test_accum.criterion_scores):
+            message_test += f"{name}: {test_score} \t"
+
+        for name, test_score in zip(self.test_accum.metric_names, self.test_accum.metric_scores):
+            message_test += f"{name}: {test_score} \t"
+
+        print(message_test)
+
 
 
     #Param Upload

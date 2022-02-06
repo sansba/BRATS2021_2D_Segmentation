@@ -22,12 +22,7 @@ train_loader = DataLoader(datasets["train"].dataset, shuffle=True, batch_size=co
 val_loader = DataLoader(datasets["val"].dataset, shuffle=False, batch_size=config.BATCH_SIZE)
 test_loader = DataLoader(datasets["test"].dataset, shuffle=False, batch_size=config.BATCH_SIZE)
 
-
-f_name, _ = test_loader.dataset.samples[0]
-print(f_name)
-
-
-"""#Model
+#Model
 model = models.SegmentationModels("unet", 1, 4)
 
 #Criterion
@@ -38,7 +33,7 @@ dice_loss = losses.DiceLoss()
 iou_score = metrics.MeanIOUScore()
 f_score = metrics.FScore()
 
-#Optimizer
+"""#Optimizer
 optimizer = torch.optim.Adam(model.model.parameters(), config.LR)
 
 #Callbacks
@@ -51,5 +46,7 @@ model.fit(train_loader, val_loader)
 #Training the model
 model.compile(epochs=config.NUM_EPOCHES, optimizer=optimizer, criterions=[ce_loss, dice_loss], metrics=[iou_score, f_score], callbacks=[early_stop, best_model])"""
 
-#Testing the model
-#model.predict(test_loader)
+model.criterions = [ce_loss, dice_loss]
+model.metrics = [iou_score, f_score]
+
+model.predict(test_loader)
