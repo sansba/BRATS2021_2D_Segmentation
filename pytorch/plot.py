@@ -1,56 +1,66 @@
+import torch
+import numpy as np
+import cv2
+
 from matplotlib import pyplot as plt
 
 
-#TRAINING ANIMATION
-class Animator:
-    """Animating train and validation metrics for each epochs."""
-    def __init__(self, xlabel=None, ylabel=None, legend=None, xlim=None, ylim=None, xscale="linear", yscale="linear",
-                fmts=("-", "m--", "g-", "r:"), nrows=1, ncols=1, figsize=(3.5, 2.5)):
-        
-        if(legend is None):
-            legend = []
-        self.fig, self.axes = plt.subplots(nrows, ncols, figsize=figsize)
-        if nrows * ncols == 1:
-            self.axes = [self.axes, ]
-
-        self.config_axes = lambda: self.set_axis(
-            self.axes[0], xlabel, ylabel, xlim, ylim, xscale, yscale, legend)
-        self.X, self.Y, self.fmts = None, None, fmts
 
 
-    def add(self, x, y):
-        if not hasattr(y, "__len__"):
-            y = [y]
-        n = len(y)
-        if not hasattr(x, "__len__"):
-            x = [x] * n
-        
-        if not self.X:
-            self.X = [[] for _ in range(n)]
-        if not self.Y:
-            self.Y = [[] for _ in range(n)]
+def label_rgb_convert(label):
+    """Converts gray label images to rgb images. \n
+        "Args:
+            - label (H x W): numpy uint8 image.
+    """
+    label[:, :, 0][(label[:, :, 0] == 1)] = 255
+    label[:, :, 1][(label[:, :, 1] == 1)] = 0
+    label[:, :, 2][(label[:, :, 2] == 1)] = 0
 
-        for i, (a, b) in enumerate(zip(x, y)):
-            if a is not None and b is not None:
-                self.X[i].append(a)
-                self.Y[i].append(b)
-        
-        self.axes[0].cla()
-        for x, y, fmt in zip(self.X, self.Y, self.fmts):
-            self.axes[0].plot(x, y, fmt)
-        self.config_axes()
+    label[:, :, 0][(label[:, :, 0] == 2)] = 0
+    label[:, :, 1][(label[:, :, 1] == 2)] = 255
+    label[:, :, 2][(label[:, :, 2] == 2)] = 0
 
-        plt.figimage(self.fig)
+    label[:, :, 0][(label[:, :, 0] == 4)] = 0
+    label[:, :, 1][(label[:, :, 1] == 4)] = 0
+    label[:, :, 2][(label[:, :, 2] == 4)] = 255
 
 
 
-    def set_axis(self, axes, xlabel, ylabel, xlim, ylim, xscale, yscale, legend):
-        axes.set_xlabel(xlabel)
-        axes.set_ylabel(ylabel)
-        axes.set_xscale(xscale)
-        axes.set_yscale(yscale)
-        axes.set_xlim(xlim)
-        axes.set_ylim(ylim)
-        if legend:
-            axes.legend(legend)
-        axes.grid()
+def add_weights(input, label):
+    """Add input and label images. \n
+        "Args:
+            - input (H x W): numpy uint8 image.
+            - label (H x W): numpy uint8 image.
+    """
+    input = cv2.cvtColor(input, cv2.COLOR_GRAY2RGB)
+    label = label_rgb_convert(cv2.cvtColor(label, cv2.COLOR_GRAY2RGB))
+
+    output = cv2.addWeighted(input, 0.8, label, 1, 10)
+
+    return output
+
+
+
+
+
+def plot(input, ground_truth, prediction, n_rows, n_cols):
+    input = input.numpy()
+    input = np.uint8(input)
+
+    ground_truth = ground_truth.numpy()
+    ground_truth = np.uint8(ground_truth)
+
+    prediction = torch.argmax(prediction, dim=1).numpy()
+    prediction = np.uint8(prediction)
+
+    fig, axis = plt.subplots(3, 4, figsize=(16, 12), sharex=True, sharey=True)
+    fig.suptitle("Predicted Images on Test Data")
+
+    counter = 0
+    for i in range(0, n_rows):
+        for j in range(0, n_cols, 2):
+            axis[i, j].title.set_text("Ground Truth")
+            axis[i, j].imshow(add_weights(input[counter], ground_truth[counter]))
+            axis[i, j + 1].title.set_text("Predicted")
+            axis[i, j + 1].imshow(add_weights(input[counter], prediction[counter]))
+            counter += 1

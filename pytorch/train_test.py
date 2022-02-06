@@ -15,7 +15,7 @@ import callbacks
 
 
 #Data preparation
-datasets = dataset.BratsDataset("drive/MyDrive/BRATS2021", n_data=1000)
+datasets = dataset.BratsDataset("brats2021", n_data=1000)
 datasets = dataset.train_val_test_split(datasets, test_val_split=0.15)
 
 train_loader = DataLoader(datasets["train"].dataset, shuffle=True, batch_size=config.BATCH_SIZE)
@@ -23,8 +23,11 @@ val_loader = DataLoader(datasets["val"].dataset, shuffle=False, batch_size=confi
 test_loader = DataLoader(datasets["test"].dataset, shuffle=False, batch_size=config.BATCH_SIZE)
 
 
+f_name, _ = test_loader.dataset.samples[0]
+print(f_name)
 
-#Model
+
+"""#Model
 model = models.SegmentationModels("unet", 1, 4)
 
 #Criterion
@@ -46,7 +49,7 @@ best_model = callbacks.SaveBestModel(verbose=True)
 model.fit(train_loader, val_loader)
 
 #Training the model
-model.compile(epochs=config.NUM_EPOCHES, optimizer=optimizer, criterions=[ce_loss, dice_loss], metrics=[iou_score, f_score], callbacks=[early_stop, best_model])
+model.compile(epochs=config.NUM_EPOCHES, optimizer=optimizer, criterions=[ce_loss, dice_loss], metrics=[iou_score, f_score], callbacks=[early_stop, best_model])"""
 
 #Testing the model
 #model.predict(test_loader)

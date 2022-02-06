@@ -1,8 +1,22 @@
 import torch
 import torch.nn as nn
+import numpy as np
 
 from tqdm import tqdm
+
 import config
+import plot
+
+
+
+
+def accum(accumulator):
+    for i, criterion in enumerate(accumulator.criterion_scores):
+        accumulator.all_losses[i].append(criterion)
+
+    for i, metric in enumerate(accumulator.metric_scores):
+        accumulator.all_metrics[i].append(metric)
+
 
 
 
@@ -45,11 +59,9 @@ def train_epoch(train_loader, accumulator, model, optimizer, criterions, metrics
     accumulator.criterion_scores /= iter_counter
     accumulator.metric_scores /= iter_counter
 
-    for i, criterion in enumerate(accumulator.criterion_scores):
-        accumulator.all_losses[i].append(criterion)
+    accum(accumulator)
 
-    for i, metric in enumerate(accumulator.metric_scores):
-        accumulator.all_metrics[i].append(metric)
+
 
 
 
@@ -84,11 +96,7 @@ def validate_epoch(val_loader, accumulator, model, criterions, metrics):
     accumulator.criterion_scores /= iter_counter
     accumulator.metric_scores /= iter_counter
 
-    for i, criterion in enumerate(accumulator.criterion_scores):
-        accumulator.all_losses[i].append(criterion)
-
-    for i, metric in enumerate(accumulator.metric_scores):
-        accumulator.all_metrics[i].append(metric)
+    accum(accumulator)
 
 
 
@@ -134,12 +142,17 @@ def predict_test(test_loader, accumulator, model, criterions, metrics, path=None
     model.eval()
     accumulator.reset()
     iter_counter = 0
+    is_plot = True
     
     with torch.no_grad():
         for image, label in test_loader:
             image = image.to(config.DEVICE)
             label = label.to(config.DEVICE)
             prediction = model(image)
+
+            if is_plot:
+                plot.plot(image, label, prediction, 3, 4)
+                is_plot = False
 
             for i, loss in enumerate(criterions):
                 accumulator.add_losses(loss(prediction, label), i)
@@ -152,11 +165,7 @@ def predict_test(test_loader, accumulator, model, criterions, metrics, path=None
         accumulator.criterion_scores /= iter_counter
         accumulator.metric_scores /= iter_counter
 
-        for i, criterion in enumerate(accumulator.criterion_scores):
-            accumulator.all_losses[i].append(criterion)
-
-        for i, metric in enumerate(accumulator.metric_scores):
-            accumulator.all_metrics[i].append(metric)
+        accum(accumulator)
         
 
 
@@ -191,8 +200,8 @@ def is_torch_integer(input: torch.Tensor) -> bool:
 #ONE HOT ENCODER
 class OneHotEncoder:
     def __init__(self):
-        """One hot encoder transformer for N classes.
-        Shape:
+        """One Hot Encoder transformer.
+            Shape:
             - Input: (B, H, W) where 
                 B = batch size of tensor, \n
                 H = height of tensor image, \n
@@ -200,6 +209,12 @@ class OneHotEncoder:
         """
 
     def __call__(self, input: torch.Tensor, n_classes) -> torch.Tensor:
+        """Transforms label encoded tensor into one hot encoded tensor. \n
+            Args:
+                - input (Tensor): input tensor to be transformed into one hot encoded tensor.
+                - n_classes (int): number of classes which tensor will have.
+        """
+
         #Dimension Error
         if input.ndimension() != 3:
             raise ValueError("Input tensor must be 3 dimensional. Got {} dimension".format(input.ndimension()))
@@ -221,10 +236,11 @@ class OneHotEncoder:
             output[:, i, :, :][input == i] = 1
 
         return output
+        
 
 
 
-#Accumulator
+#ACCUMULATOR
 class Accumulator:
     def __init__(self, criterions, metrics):
         """Accumulates train's and validation's loss values and metric scores for each iter. \n
@@ -232,8 +248,8 @@ class Accumulator:
                 - criterions (list): criterion's functions list.
                 - metrics (list): metric's functions list.
         """
-        self.criterion_scores = [0.0] * len(criterions)
-        self.metric_scores = [0.0] * len(metrics)
+        self.criterion_scores = np.array([0.0] * len(criterions))
+        self.metric_scores = np.array([0.0] * len(metrics))
         self.criterion_names = self.get_names(criterions)
         self.metric_names = self.get_names(metrics)
 
@@ -242,16 +258,28 @@ class Accumulator:
 
     #Add Losses
     def add_losses(self, criterion_score, index):
+        """Accumulatos Loss Scores. \n
+            Args:
+                - criterion_score (tensor): criterion function's loss score.
+                - index (int): index number of loss value to be added.
+        """
         self.criterion_scores[index] += criterion_score.item()
 
     #Add Metrics
     def add_metrics(self, metric_score, index):
-        self.metric_scores[index] += metric_score.item()
+        """Accumulatos Metric Scores. \n
+            Args:
+                - metric_score (numpy array): metric function's metric score.
+                - index (int): index number of metric value to be added.
+        """
+        self.metric_scores[index] += metric_score
 
     #Reset
     def reset(self):
-        self.criterion_scores = [0.0] * len(self.criterion_scores)
-        self.metric_scores = [0.0] * len(self.metric_scores)
+        """Reset Loss and Metric Scores.
+        """
+        self.criterion_scores = np.array([0.0] * len(self.criterion_names))
+        self.metric_scores = np.array([0.0] * len(self.metric_names))
 
     #Create Dict
     def get_names(self, input):
