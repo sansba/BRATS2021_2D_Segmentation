@@ -12,6 +12,10 @@ def label_rgb_convert(label):
         "Args:
             - label (H x W): numpy uint8 image.
     """
+    label[:, :, 0][(label[:, :, 0] == 0)] = 0
+    label[:, :, 1][(label[:, :, 1] == 0)] = 0
+    label[:, :, 2][(label[:, :, 2] == 0)] = 0
+
     label[:, :, 0][(label[:, :, 0] == 1)] = 255
     label[:, :, 1][(label[:, :, 1] == 1)] = 0
     label[:, :, 2][(label[:, :, 2] == 1)] = 0
@@ -20,9 +24,9 @@ def label_rgb_convert(label):
     label[:, :, 1][(label[:, :, 1] == 2)] = 255
     label[:, :, 2][(label[:, :, 2] == 2)] = 0
 
-    label[:, :, 0][(label[:, :, 0] == 4)] = 0
-    label[:, :, 1][(label[:, :, 1] == 4)] = 0
-    label[:, :, 2][(label[:, :, 2] == 4)] = 255
+    label[:, :, 0][(label[:, :, 0] == 3)] = 0
+    label[:, :, 1][(label[:, :, 1] == 3)] = 0
+    label[:, :, 2][(label[:, :, 2] == 3)] = 255
 
 
 
