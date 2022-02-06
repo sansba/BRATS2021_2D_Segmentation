@@ -15,7 +15,7 @@ import callbacks
 
 
 #Data preparation
-datasets = dataset.BratsDataset("brats2021", n_data=1000)
+datasets = dataset.BratsDataset("/content/drive/MyDrive/BRATS2021", n_data=1000)
 datasets = dataset.train_val_test_split(datasets, test_val_split=0.15)
 
 train_loader = DataLoader(datasets["train"].dataset, shuffle=True, batch_size=config.BATCH_SIZE)
@@ -48,5 +48,7 @@ model.compile(epochs=config.NUM_EPOCHES, optimizer=optimizer, criterions=[ce_los
 
 model.criterions = [ce_loss, dice_loss]
 model.metrics = [iou_score, f_score]
+
+model.param_upload("/content/drive/MyDrive/best_model.pt")
 
 model.predict(test_loader)

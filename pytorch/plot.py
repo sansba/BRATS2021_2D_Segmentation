@@ -45,7 +45,7 @@ def add_weights(input, label):
 
 
 def plot(input, ground_truth, prediction, n_rows, n_cols):
-    input = input.cpu().numpy()
+    input = input.squeeze(1).cpu().numpy()
     input = np.uint8(input)
 
     ground_truth = ground_truth.cpu().numpy()

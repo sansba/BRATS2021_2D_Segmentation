@@ -43,6 +43,7 @@ class PrecisionScore(nn.Module):
          - FP: False Positives
         """
         super(PrecisionScore, self).__init__()
+        self.one_hot_encoder = functional.OneHotEncoder()
 
     def forward(self, prediction, ground_truth, smooth=1e-9):
         """Args:
@@ -75,6 +76,7 @@ class RecallScore(nn.Module):
          - FN: False Negatives
         """
         super(RecallScore, self).__init__()
+        self.one_hot_encoder = functional.OneHotEncoder()
 
     def forward(self, prediction, ground_truth, smooth=1e-9):
         """Args:
