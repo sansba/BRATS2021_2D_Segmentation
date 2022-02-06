@@ -33,7 +33,8 @@ def add_weights(input, label):
             - label (H x W): numpy uint8 image.
     """
     input = cv2.cvtColor(input, cv2.COLOR_GRAY2RGB)
-    label = label_rgb_convert(cv2.cvtColor(label, cv2.COLOR_GRAY2RGB))
+    label = cv2.cvtColor(label, cv2.COLOR_GRAY2RGB)
+    label_rgb_convert(label)
 
     output = cv2.addWeighted(input, 0.8, label, 1, 10)
 
@@ -44,13 +45,13 @@ def add_weights(input, label):
 
 
 def plot(input, ground_truth, prediction, n_rows, n_cols):
-    input = input.numpy()
+    input = input.cpu().numpy()
     input = np.uint8(input)
 
-    ground_truth = ground_truth.numpy()
+    ground_truth = ground_truth.cpu().numpy()
     ground_truth = np.uint8(ground_truth)
 
-    prediction = torch.argmax(prediction, dim=1).numpy()
+    prediction = torch.argmax(prediction, dim=1).cpu().numpy()
     prediction = np.uint8(prediction)
 
     fig, axis = plt.subplots(3, 4, figsize=(16, 12), sharex=True, sharey=True)

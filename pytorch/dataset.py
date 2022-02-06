@@ -17,8 +17,8 @@ def read_data_paths(main_path, n_data):
             - n_data (int): number of data. \n
                 0: all data
         """
-    flairs_path = os.path.join(main_path, "data", "*", "data", "*_flair", "*.png")
-    segs_path = os.path.join(main_path, "data", "*", "data", "*_seg", "*.png")
+    flairs_path = os.path.join(main_path, "*","*_flair", "*.png")
+    segs_path = os.path.join(main_path, "*", "*_seg", "*.png")
 
     data_list = []
     for flair_path, seg_path in zip(glob.glob(flairs_path), glob.glob(segs_path)):
