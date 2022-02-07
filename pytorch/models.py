@@ -184,7 +184,7 @@ class SegmentationModels:
 
 
     #Compile
-    def compile(self, epochs, optimizer, criterions, metrics, callbacks):
+    def compile(self, epochs, optimizer, criterions, metrics, callbacks, is_init=True):
         """Trains model. \n
             Args:
                 - epochs (int): number of epochs.
@@ -215,7 +215,7 @@ class SegmentationModels:
         self.train_accum = functional.Accumulator(self.criterions, self.metrics)
         self.val_accum = functional.Accumulator(self.criterions, self.metrics)
 
-        functional.train_net(self.train_loader, self.val_loader, self.train_accum, self.val_accum,  self.model, self.optimizer, self.criterions, self.metrics, self.callbacks, epochs, self.training_print)
+        functional.train_net(self.train_loader, self.val_loader, self.train_accum, self.val_accum,  self.model, self.optimizer, self.criterions, self.metrics, self.callbacks, epochs, self.training_print, is_init)
         
 
     #Predict
