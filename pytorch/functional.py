@@ -143,21 +143,21 @@ def predict_test(test_loader, accumulator, model, criterions, metrics):
     accumulator.reset()
     is_plot = True
     
-    with torch.no_grad():
-        for image, label in test_loader:
+    for image, label in tqdm(test_loader):
+        with torch.no_grad():
             image = image.to(config.DEVICE)
             label = label.to(config.DEVICE)
             prediction = model(image)
 
-            if is_plot:
-                plot.plot(image, label, prediction, 3, 4)
-                is_plot = False
+        if is_plot:
+            plot.plot(image, label, prediction, 3, 4)
+            is_plot = False
 
-            for i, loss in enumerate(criterions):
-                accumulator.add_losses(loss(prediction, label), i)
-        
-            for i, metric in enumerate(metrics):
-                accumulator.add_metrics(metric(prediction, label), i)
+        for i, loss in enumerate(criterions):
+            accumulator.add_losses(loss(prediction, label), i)
+    
+        for i, metric in enumerate(metrics):
+            accumulator.add_metrics(metric(prediction, label), i)
 
 
 
