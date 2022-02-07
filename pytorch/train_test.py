@@ -18,9 +18,9 @@ import callbacks
 datasets = dataset.BratsDataset("/content/drive/MyDrive/BRATS2021", n_data=1000)
 datasets = dataset.train_val_test_split(datasets, test_val_split=0.15)
 
-train_loader = DataLoader(datasets["train"].dataset, shuffle=True, batch_size=config.BATCH_SIZE)
-val_loader = DataLoader(datasets["val"].dataset, shuffle=False, batch_size=config.BATCH_SIZE)
-test_loader = DataLoader(datasets["test"].dataset, shuffle=False, batch_size=config.BATCH_SIZE)
+train_loader = DataLoader(datasets["train"], shuffle=True, batch_size=config.BATCH_SIZE)
+val_loader = DataLoader(datasets["val"], shuffle=False, batch_size=config.BATCH_SIZE)
+test_loader = DataLoader(datasets["test"], shuffle=False, batch_size=config.BATCH_SIZE)
 
 #Model
 model = models.SegmentationModels("unet", 1, 4)
