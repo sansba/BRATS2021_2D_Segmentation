@@ -15,7 +15,7 @@ import callbacks
 
 
 #Data preparation
-datasets = dataset.BratsDataset("/content/drive/MyDrive/BRATS2021", n_data=1000)
+datasets = dataset.BratsDataset("/content/drive/MyDrive/BRATS2021", n_data=5000)
 datasets = dataset.train_val_test_split(datasets, test_val_split=0.15)
 
 train_loader = DataLoader(datasets["train"], shuffle=True, batch_size=config.BATCH_SIZE)
@@ -27,28 +27,24 @@ model = models.SegmentationModels("unet", 1, 4)
 
 #Criterion
 ce_loss = nn.CrossEntropyLoss()
-dice_loss = losses.DiceLoss()
 
 #Metric
 iou_score = metrics.MeanIOUScore()
-f_score = metrics.FScore()
+recall = metrics.RecallScore()
+precision = metrics.PrecisionScore()
 
-"""#Optimizer
+#Optimizer
 optimizer = torch.optim.Adam(model.model.parameters(), config.LR)
 
 #Callbacks
-early_stop = callbacks.EarlyStopping(verbose=True, path="early_model.pt")
-best_model = callbacks.SaveBestModel(verbose=True)
+early_stop = callbacks.EarlyStopping(verbose=True, path="unet_early_model.pt")
+best_model = callbacks.SaveBestModel(verbose=True, path="unet_best_model.pt")
 
 #Fitting data into the model
 model.fit(train_loader, val_loader)
 
 #Training the model
-model.compile(epochs=config.NUM_EPOCHES, optimizer=optimizer, criterions=[ce_loss, dice_loss], metrics=[iou_score, f_score], callbacks=[early_stop, best_model])"""
+model.compile(epochs=config.NUM_EPOCHES, optimizer=optimizer, criterions=[ce_loss], metrics=[iou_score, recall, precision], callbacks=[early_stop, best_model])
 
-model.criterions = [ce_loss, dice_loss]
-model.metrics = [iou_score, f_score]
-
-model.param_upload("/content/drive/MyDrive/best_model.pt")
 
 model.predict(test_loader)

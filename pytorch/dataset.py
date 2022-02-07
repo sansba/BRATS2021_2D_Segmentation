@@ -30,7 +30,7 @@ def read_data_paths(main_path, n_data):
 
 
 #TRAIN VAL TEST SPLIT
-def train_val_test_split(dataset, test_val_split=0.15):
+def train_val_test_split(dataset, test_val_split=0.15, shuffle=True):
     """Split dataset into train, validation and test data. \n
         Args:
             - dataset (DataLoader): dataset to be splitted.
@@ -40,8 +40,8 @@ def train_val_test_split(dataset, test_val_split=0.15):
     if test_val_split <= 0 or test_val_split >= 1:
         raise ValueError("Given test_val_split value ({}) causes ambiguity. It must be between 0 and 1.".format(test_val_split))
 
-    train_idx, val_idx = train_test_split(list(range(len(dataset))), test_size=test_val_split)
-    train_idx, test_idx = train_test_split(train_idx, test_size=test_val_split)
+    train_idx, val_idx = train_test_split(list(range(len(dataset))), test_size=test_val_split, shuffle=shuffle)
+    train_idx, test_idx = train_test_split(train_idx, test_size=test_val_split, shuffle=shuffle)
     datasets = {}
     
     datasets['train'] = data.Subset(dataset, train_idx)
