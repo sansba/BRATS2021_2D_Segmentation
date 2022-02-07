@@ -101,7 +101,7 @@ def validate_epoch(val_loader, accumulator, model, criterions, metrics):
 
 
 #Train Net
-def train_net(train_loader, val_loader, train_accum, val_accum, model, optimizer, criterions, metrics, callbacks, num_epochs, plot_fn):
+def train_net(train_loader, val_loader, train_accum, val_accum, model, optimizer, criterions, metrics, callbacks, num_epochs, plot_fn, is_init=True):
     """Trains model as long as number of epochs. \n
         Args:
             - train_loader (DataLoader): training dataset loader.
@@ -115,7 +115,8 @@ def train_net(train_loader, val_loader, train_accum, val_accum, model, optimizer
             - num_epochs (int): number of epochs.
             - plot_fn: prints train's and validation's losses and metrics.
     """
-    model.apply(init_weights)
+    if is_init:
+        model.apply(init_weights)
 
     for epoch in range(num_epochs):
         train_epoch(train_loader, train_accum, model, optimizer, criterions, metrics)
