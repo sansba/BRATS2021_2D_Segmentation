@@ -73,36 +73,49 @@ def create_nii_slices(from_path: str, to_path: str, slice_num: int):
             - to_path (str): path where png files will be extracted.
             - slice_num (int): images number to be got from each patient.
     """
-    for path1_flair, path1_seg, path1_t1, path1_t1ce, path1_t2 in zip(glob.glob(from_path + "/*_flair"), glob.glob(from_path + "/*_t1"), glob.glob(from_path + "/*_t1ce"), glob.glob(from_path + "/*_t2"), glob.glob(from_path + "/*_seg")):
-        for path2_flair, path2_seg, path2_t1, path2_t1ce, path2_t2 in zip(glob.glob(path1_flair + "/*_flair*"), glob.glob(path1_t1 + "/*_t1*"), glob.glob(path1_t1ce + "/*_t1ce*"), glob.glob(path1_t2 + "/*_t2*"), glob.glob(path1_seg + "/*_seg*")):
+    for path1_flair, path1_t1, path1_t1ce, path1_t2, path1_seg in zip(glob.glob(from_path + "/*_flair"), glob.glob(from_path + "/*_t1"), glob.glob(from_path + "/*_t1ce"), glob.glob(from_path + "/*_t2"), glob.glob(from_path + "/*_seg")):
+        for path2_flair, path2_t1, path2_t1ce, path2_t2, path2_seg in zip(glob.glob(path1_flair + "/*_flair*"), glob.glob(path1_t1 + "/*_t1*"), glob.glob(path1_t1ce + "/*_t1ce*"), glob.glob(path1_t2 + "/*_t2*"), glob.glob(path1_seg + "/*_seg*")):
             #Path for output
             patient_num = from_path.split("/")[-1]
 
+            #Flair
             flair_name = patient_num + "_flair"
+            #T1
             t1_name = patient_num + "_t1"
+            #T1ce
             t1ce_name = patient_num + "_t1ce"
+            #T2
             t2_name = patient_num + "_t2"
+            #Seg
             seg_name = patient_num + "_seg"
 
 
-            #Create output paths if it does not exist
+            #Flair
             if not os.path.exists(os.path.join(to_path, patient_num, flair_name)):
                 os.makedirs(os.path.join(to_path, patient_num, flair_name))
+            #T1
             if not os.path.exists(os.path.join(to_path, patient_num, t1_name)):
                 os.makedirs(os.path.join(to_path, patient_num, t1_name))
+            #T1ce
             if not os.path.exists(os.path.join(to_path, patient_num, t1ce_name)):
                 os.makedirs(os.path.join(to_path, patient_num, t1ce_name))
+            #T2
             if not os.path.exists(os.path.join(to_path, patient_num, t2_name)):
                 os.makedirs(os.path.join(to_path, patient_num, t2_name))
+            #Seg
             if not os.path.exists(os.path.join(to_path, patient_num, seg_name)):
                 os.makedirs(os.path.join(to_path, patient_num, seg_name))
 
             
-            #Read nii files
+            #Flair
             flair = nib.load(path2_flair).get_fdata()
+            #T1
             t1 = nib.load(path2_t1).get_fdata()
+            #T1ce
             t1ce = nib.load(path2_t1ce).get_fdata()
+            #T2
             t2 = nib.load(path2_t2).get_fdata()
+            #Seg
             seg = nib.load(path2_seg).get_fdata()
 
             counter = 0
@@ -110,34 +123,42 @@ def create_nii_slices(from_path: str, to_path: str, slice_num: int):
             for i in range(40, flair.shape[2] - 40):
                 if (seg[:, :, i] == 1).any() or (seg[:, :, i] == 2).any() or (seg[:, :, i] == 4).any():
                     
-                    #Turn images into integer
+                    #Flair
                     flair_img = flair[:, :, i]
                     flair_img = np.uint8(flair_img / flair_img.max() * 255)
-                    
+                    #T1
                     t1_img = t1[:, :, i]
                     t1_img = np.uint8(t1_img / t1_img.max() * 255)
-
+                    #T1ce
                     t1ce_img = t1ce[:, :, i]
                     t1ce_img = np.uint8(t1ce_img / t1ce_img.max() * 255)
-
+                    #T2
                     t2_img = t2[:, :, i]
                     t2_img = np.uint8(t2_img / t2_img.max() * 255)
-
+                    #Seg
                     seg_img = seg[:, :, i]
                     seg_img = np.uint8(seg_img)
 
-                    #Flair and seg paths
+                    #Flair
                     flair_path = os.path.join(to_path, patient_num, flair_name, str(i) + ".png")
+                    #T1
                     t1_path = os.path.join(to_path, patient_num, t1_name, str(i) + ".png")
+                    #T1ce
                     t1ce_path = os.path.join(to_path, patient_num, t1ce_name, str(i) + ".png")
+                    #T2
                     t2_path = os.path.join(to_path, patient_num, t2_name, str(i) + ".png")
+                    #Seg
                     seg_path = os.path.join(to_path, patient_num, seg_name, str(i) + ".png")
 
-                    #Create images
+                    #Flair
                     cv2.imwrite(flair_path, flair_img)
+                    #T1
                     cv2.imwrite(t1_path, t1_img)
+                    #T1ce
                     cv2.imwrite(t1ce_path, t1ce_img)
+                    #T2
                     cv2.imwrite(t2_path, t2_img)
+                    #Seg
                     cv2.imwrite(seg_path, seg_img)
                 
                 counter += 1
