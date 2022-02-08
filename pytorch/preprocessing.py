@@ -30,15 +30,15 @@ def extract_tar_file(from_path: str, to_path: str):
 
 
 #Create Images
-def create_images(from_path: str, to_path: str, patient_num: int, slice_num: int):
+def create_images(from_path: str, to_path: str, data_num: int, slice_num: int):
     """Extracts gz file. \n
         Args:
             - path (str): path where gz file is stored.
             - to_path (str): path where images will be extracted.
-            - patient_num (int): patient number.
+            - data_num (int): total image number.
             - slice_num (int): images number to be got from each patient.
     """
-    counter = 0
+    data_counter = [0]
 
     #Path finding process
     for path1 in sorted(glob.glob(from_path + "/*")):
@@ -55,10 +55,8 @@ def create_images(from_path: str, to_path: str, patient_num: int, slice_num: int
             ptl.extract_archive(path2, outdir=out_dir)
             os.remove(path2)
 
-        create_nii_slices(path1, to_path, slice_num)
-        
-        counter += 1
-        if counter == patient_num:
+        create_nii_slices(path1, to_path, data_num, slice_num, data_counter)
+        if data_counter[0] == data_num:
             break
         
 
@@ -66,11 +64,12 @@ def create_images(from_path: str, to_path: str, patient_num: int, slice_num: int
 
 
 #CREATE NII SLICES
-def create_nii_slices(from_path: str, to_path: str, slice_num: int):
+def create_nii_slices(from_path: str, to_path: str, data_num: int, slice_num: int, data_counter):
     """Creates images from 3D image data. \n
         Args:
             - from_path (str): path where nii files is stored.
             - to_path (str): path where png files will be extracted.
+            - data_num (int): total image number.
             - slice_num (int): images number to be got from each patient.
     """
     for path1_flair, path1_t1, path1_t1ce, path1_t2, path1_seg in zip(glob.glob(from_path + "/*_flair"), glob.glob(from_path + "/*_t1"), glob.glob(from_path + "/*_t1ce"), glob.glob(from_path + "/*_t2"), glob.glob(from_path + "/*_seg")):
@@ -118,9 +117,9 @@ def create_nii_slices(from_path: str, to_path: str, slice_num: int):
             #Seg
             seg = nib.load(path2_seg).get_fdata()
 
-            counter = 0
+            slice_counter = 0
             #Create image files
-            for i in range(40, flair.shape[2] - 40):
+            for i in range(flair.shape[2]):
                 if (seg[:, :, i] == 1).any() or (seg[:, :, i] == 2).any() or (seg[:, :, i] == 4).any():
                     
                     #Flair
@@ -161,9 +160,10 @@ def create_nii_slices(from_path: str, to_path: str, slice_num: int):
                     #Seg
                     cv2.imwrite(seg_path, seg_img)
                 
-                counter += 1
-                if counter == slice_num:
-                    break
+                    data_counter[0] += 1
+                    slice_counter += 1
+                    if (slice_counter == slice_num) or (data_counter[0] == data_num):
+                        break
             
             os.remove(path2_flair)
             os.remove(path2_t1)
