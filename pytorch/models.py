@@ -10,7 +10,7 @@ import functional
 
 #BASIC UNET MODEL
 class UNet(nn.Module):
-    def __init__(self, in_ch: int, n_classes: int):
+    def __init__(self, in_ch, n_classes):
         """Basic UNet Model. \n
             Args:
                 - in_ch (int): input channel of input image.
@@ -19,20 +19,21 @@ class UNet(nn.Module):
         super(UNet, self).__init__()
         self.in_ch = in_ch
         self.n_classes = n_classes
+        channel = 64
         
-        self.inconv = InConv(in_ch, 64)
+        self.inconv = InConv(in_ch, channel)
         
-        self.down1 = Down(64, 128)
-        self.down2 = Down(128, 256)
-        self.down3 = Down(256, 512)
-        self.down4 = Down(512, 1024)
+        self.down1 = Down(channel, channel * 2)
+        self.down2 = Down(channel * 2, channel * 4)
+        self.down3 = Down(channel * 4, channel * 8)
+        self.down4 = Down(channel * 8, channel * 16)
 
-        self.up1 = Up(1024, 512)
-        self.up2 = Up(512, 256)
-        self.up3 = Up(256, 128)
-        self.up4 = Up(128, 64)
+        self.up1 = Up(channel * 16, channel * 8)
+        self.up2 = Up(channel * 8, channel * 4)
+        self.up3 = Up(channel * 4, channel * 2)
+        self.up4 = Up(channel * 2, channel)
 
-        self.outconv = OutConv(64, n_classes)
+        self.outconv = OutConv(channel, n_classes)
 
 
     def forward(self, x):
@@ -55,7 +56,7 @@ class UNet(nn.Module):
 
 #INCEPTION UNET MODEL
 class InceptionUNet(nn.Module):
-    def __init__(self, in_ch: int, n_classes: int):
+    def __init__(self, in_ch, n_classes):
         """Inception UNet Model. \n
             Args:
                 - in_ch (int): input channel of input image.
@@ -64,20 +65,21 @@ class InceptionUNet(nn.Module):
         super(InceptionUNet, self).__init__()
         self.in_ch = in_ch
         self.n_classes = n_classes
+        channel = 64
 
-        self.inconv = IncInConv(in_ch, 64)
+        self.inconv = IncInConv(in_ch, channel)
 
-        self.down1 = IncDown(64, 128)
-        self.down2 = IncDown(128, 256)
-        self.down3 = IncDown(256, 512)
-        self.down4 = IncDown(512, 1024)
+        self.down1 = IncDown(channel, channel * 2)
+        self.down2 = IncDown(channel * 2, channel * 4)
+        self.down3 = IncDown(channel * 4, channel * 8)
+        self.down4 = IncDown(channel * 8, channel * 16)
 
-        self.up1 = IncUp(1024, 512)
-        self.up2 = IncUp(512, 256)
-        self.up3 = IncUp(256, 128)
-        self.up4 = IncUp(128, 64)
+        self.up1 = IncUp(channel * 16, channel * 8)
+        self.up2 = IncUp(channel * 8, channel * 4)
+        self.up3 = IncUp(channel * 4, channel * 2)
+        self.up4 = IncUp(channel * 2, channel)
 
-        self.outconv = IncOutConv(64, n_classes)
+        self.outconv = IncOutConv(channel, n_classes)
 
     def forward(self, x):
         x1 = self.inconv(x)
@@ -98,7 +100,7 @@ class InceptionUNet(nn.Module):
 
 #ARROW UNET MODEL
 class ArrowUNet(nn.Module):
-    def __init__(self, in_ch: int, n_classes: int):
+    def __init__(self, in_ch, n_classes):
         """Arrow UNet Model. \n
             Args:
                 - in_ch (int): input channel of input image.
@@ -140,15 +142,35 @@ class ArrowUNet(nn.Module):
 
 
 
+#UNET++
+class UNET2P(nn.Module):
+    def __init__(self):
+        pass
+
+
+
+
+
+
+#UNET+++
+class UNET3P(nn.Module):
+    def __init__(self):
+        pass
+
+
+
+
+
 
 #SEGMENTATIN MODELS
 class SegmentationModels:
-    def __init__(self, model_name, in_ch, n_classes):
+    def __init__(self, model_name, in_ch, n_classes, L=4):
         """General class for segmentation models. \n
             Args:
                 - model_name (str): model selection ('unet', 'incunet', 'arrowunet').
                 - in_ch (int): input channel of input image.
                 - n_classes (int): number of classes.
+                - L (int): deepness of model
         """
         self.models = {"unet":UNet, "inception":InceptionUNet, "arrow":ArrowUNet}
         self.model_name = model_name
@@ -159,7 +181,8 @@ class SegmentationModels:
 
         self.in_ch = in_ch
         self.n_classes = n_classes
-        self.model = self.models[model_name.lower()](self.in_ch, self.n_classes).to(config.DEVICE)
+        self.L = L
+        self.model = self.models[model_name.lower()](self.in_ch, self.n_classes, self.L).to(config.DEVICE)
 
 
         self.train_loader = None
