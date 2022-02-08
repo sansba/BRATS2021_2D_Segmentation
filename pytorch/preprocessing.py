@@ -29,7 +29,7 @@ def extract_tar_file(from_path: str, to_path: str):
 
 
 
-#EXTRACT GZ FILE
+#Create Images
 def create_images(from_path: str, to_path: str, patient_num: int, slice_num: int):
     """Extracts gz file. \n
         Args:
@@ -41,7 +41,7 @@ def create_images(from_path: str, to_path: str, patient_num: int, slice_num: int
     counter = 0
 
     #Path finding process
-    for path1 in glob.glob(from_path + "/*"):
+    for path1 in sorted(glob.glob(from_path + "/*")):
         for path2 in glob.glob(path1 + "/*.gz"):
             
             #Out direction of flair and seg
