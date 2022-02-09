@@ -145,7 +145,7 @@ class ArrowUNet(nn.Module):
 
 #SEGMENTATIN MODELS
 class SegmentationModels:
-    def __init__(self, model_name, in_ch, n_classes, L=4):
+    def __init__(self, model_name, in_ch, n_classes):
         """General class for segmentation models. \n
             Args:
                 - model_name (str): model selection ('unet', 'incunet', 'arrowunet').
@@ -162,8 +162,7 @@ class SegmentationModels:
 
         self.in_ch = in_ch
         self.n_classes = n_classes
-        self.L = L
-        self.model = self.models[model_name.lower()](self.in_ch, self.n_classes, self.L).to(config.DEVICE)
+        self.model = self.models[model_name.lower()](self.in_ch, self.n_classes).to(config.DEVICE)
 
 
         self.train_loader = None
