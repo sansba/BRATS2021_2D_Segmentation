@@ -33,11 +33,8 @@ def train_epoch(train_loader, accumulator, model, optimizer, criterions, metrics
     """
     model.train()
     accumulator.reset()
-    iter_counter = 0
 
     for image, label in tqdm(train_loader):
-        iter_counter += 1
-
         image = image.to(config.DEVICE)
         label = label.to(config.DEVICE)
         prediction = model(image)
@@ -56,8 +53,8 @@ def train_epoch(train_loader, accumulator, model, optimizer, criterions, metrics
         losses.backward()
         optimizer.step()
 
-    accumulator.criterion_scores /= iter_counter
-    accumulator.metric_scores /= iter_counter
+    accumulator.criterion_scores /= len(train_loader)
+    accumulator.metric_scores /= len(train_loader)
 
     accum(accumulator)
 
@@ -76,10 +73,8 @@ def validate_epoch(val_loader, accumulator, model, criterions, metrics):
     """
     model.eval()
     accumulator.reset()
-    iter_counter = 0
 
     for image, label in val_loader:
-        iter_counter += 1
 
         with torch.no_grad():
             image = image.to(config.DEVICE)
@@ -92,8 +87,8 @@ def validate_epoch(val_loader, accumulator, model, criterions, metrics):
         for i, metric in enumerate(metrics):
             accumulator.add_metrics(metric(prediction, label), i)
 
-    accumulator.criterion_scores /= iter_counter
-    accumulator.metric_scores /= iter_counter
+    accumulator.criterion_scores /= len(val_loader)
+    accumulator.metric_scores /= len(val_loader)
 
     accum(accumulator)
 
@@ -142,10 +137,8 @@ def predict_test(test_loader, accumulator, model, criterions, metrics):
     model.eval()
     accumulator.reset()
     is_plot = True
-    iter_counter = 0
     
     for image, label in tqdm(test_loader):
-        iter_counter += 1
 
         with torch.no_grad():
             image = image.to(config.DEVICE)
@@ -162,8 +155,8 @@ def predict_test(test_loader, accumulator, model, criterions, metrics):
         for i, metric in enumerate(metrics):
             accumulator.add_metrics(metric(prediction, label), i)
 
-    accumulator.criterion_scores /= iter_counter
-    accumulator.metric_scores /= iter_counter
+    accumulator.criterion_scores /= len(test_loader)
+    accumulator.metric_scores /= len(test_loader)
 
 
 
