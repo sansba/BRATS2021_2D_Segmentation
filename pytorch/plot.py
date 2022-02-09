@@ -46,7 +46,7 @@ def add_weights(input, label):
 
 
 def plot(input, ground_truth, prediction, n_rows, n_cols):
-    input = input.squeeze(1).cpu().numpy()
+    input = input.cpu().numpy()
     input = np.uint8(input)
 
     ground_truth = ground_truth.cpu().numpy()
@@ -56,15 +56,15 @@ def plot(input, ground_truth, prediction, n_rows, n_cols):
     prediction = np.uint8(prediction)
 
     fig, axis = plt.subplots(3, 4, figsize=(16, 12), sharex=True, sharey=True)
-    fig.suptitle("Predicted Images on Test Data")
+    fig.suptitle("Predicted Images on Test Data (Only Flair)")
 
     counter = 0
     for i in range(0, n_rows):
         for j in range(0, n_cols, 2):
             axis[i, j].title.set_text("Ground Truth")
-            axis[i, j].imshow(add_weights(input[counter], ground_truth[counter]))
+            axis[i, j].imshow(add_weights(input[0, counter], ground_truth[counter]))
             axis[i, j + 1].title.set_text("Predicted")
-            axis[i, j + 1].imshow(add_weights(input[counter], prediction[counter]))
+            axis[i, j + 1].imshow(add_weights(input[0, counter], prediction[counter]))
             counter += 1
 
 
