@@ -6,7 +6,6 @@ from matplotlib import pyplot as plt
 
 
 
-
 def label_rgb_convert(label):
     """Converts gray label images to rgb images. \n
         "Args:
@@ -46,8 +45,6 @@ def add_weights(input, label):
 
 
 
-
-
 def plot(input, ground_truth, prediction, n_rows, n_cols):
     input = input.squeeze(1).cpu().numpy()
     input = np.uint8(input)
@@ -69,3 +66,25 @@ def plot(input, ground_truth, prediction, n_rows, n_cols):
             axis[i, j + 1].title.set_text("Predicted")
             axis[i, j + 1].imshow(add_weights(input[counter], prediction[counter]))
             counter += 1
+
+
+
+def history_plot(train_accum, val_accum, num_epoch):
+    x_range = range(1, num_epoch + 1)
+
+    len_criterion = len(train_accum.criterion_names)
+    fig_criterion, axis_criterion = plt.subplots(1, len_criterion, sharex=True)
+    fig_criterion.suptitle("Criterion Losses per each epoch")
+    for i in range(len_criterion):
+        axis_criterion[i].title.set_text(train_accum.criterion_names[i])
+        axis_criterion[i].plot(x_range, train_accum.all_losses[i])
+        axis_criterion[i].plot(x_range, val_accum.all_losses[i])
+
+
+    len_metrics = len(train_accum.metric_names)
+    fig_metrics, axis_metrics = plt.subplots(1, len_metrics, sharex=True)
+    fig_metrics.suptitle("Metric Scores per each epoch")
+    for i in range(len_metrics):
+        axis_metrics[i].title.set_text(train_accum.metric_names[i])
+        axis_metrics[i].plot(x_range, train_accum.all_metrics[i])
+        axis_metrics[i].plot(x_range, val_accum.all_metrics[i])

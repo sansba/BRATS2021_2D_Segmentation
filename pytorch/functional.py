@@ -56,10 +56,10 @@ def train_epoch(train_loader, accumulator, model, optimizer, criterions, metrics
         losses.backward()
         optimizer.step()
 
-        
-
     accumulator.criterion_scores /= iter_counter
     accumulator.metric_scores /= iter_counter
+
+    accum(accumulator)
 
 
 
@@ -92,9 +92,10 @@ def validate_epoch(val_loader, accumulator, model, criterions, metrics):
         for i, metric in enumerate(metrics):
             accumulator.add_metrics(metric(prediction, label), i)
 
-        
     accumulator.criterion_scores /= iter_counter
     accumulator.metric_scores /= iter_counter
+
+    accum(accumulator)
 
 
 

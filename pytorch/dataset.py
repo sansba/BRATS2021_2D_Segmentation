@@ -10,24 +10,26 @@ import os
 
 
 #READ DATA PATHS
-def read_data_paths(main_path, n_data):
+def read_data_paths(main_path):
     """Create a list that store input and mask images [input_1, mask_1] ... [input_n, mask_n]. \n
         Args:
             - main_path (str): main path where data is stored.
             - n_data (int): number of data. \n
                 0: all data
         """
-    flairs_path = os.path.join(main_path, "data", "*", "data", "*_flair", "*.png")
-    segs_path = os.path.join(main_path, "data", "*", "data", "*_seg", "*.png")
+    flair_paths = os.path.join(main_path, "*", "*_flair", "*.png")
+    t1_paths = os.path.join(main_path, "*", "*_t1", "*.png")
+    t1ce_paths = os.path.join(main_path, "*", "*_t1ce", "*.png")
+    t2_paths = os.path.join(main_path, "*", "*_t2", "*.png")
+    seg_paths = os.path.join(main_path, "*", "*_seg", "*.png")
 
     data_list = []
-    for flair_path, seg_path in zip(glob.glob(flairs_path), glob.glob(segs_path)):
-        data_list.append([flair_path, seg_path])
-        if len(data_list) == n_data:
-            break
+    for flair_path, t1_path, t1ce_path, t2_path, seg_path in zip(glob.glob(flair_paths), glob.glob(t1_paths), glob.glob(t1ce_paths), glob.glob(t2_paths), glob.glob(seg_paths)):
+        data_list.append([flair_path, t1_path, t1ce_path, t2_path, seg_path])
+
     return data_list
 
-
+    
 
 #TRAIN VAL TEST SPLIT
 def train_val_test_split(dataset, test_val_split=0.15, shuffle=True):
@@ -54,16 +56,14 @@ def train_val_test_split(dataset, test_val_split=0.15, shuffle=True):
 
 #BRATS DATASET
 class BratsDataset(data.Dataset):
-    def __init__(self, main_path, n_data, transforms=transforms.CenterCrop(160)):
+    def __init__(self, main_path, transforms=transforms.CenterCrop(160)):
         """Creates brats dataset for segmentation tasks. \n
             Args:
                 - main_path (str): path to the datas.
-                - n_data (int): number of data.\n
-                    0: all data
                 - transforms (Transforms): transforms to be applied to the input and mask images.
                     Default: None
         """
-        self.data_list = read_data_paths(main_path, n_data)
+        self.data_list = read_data_paths(main_path)
         self.transforms = transforms
 
 
@@ -72,67 +72,28 @@ class BratsDataset(data.Dataset):
 
 
     def __getitem__(self, index):
-        img = cv2.imread(self.data_list[index][0], 0)
-        mask = cv2.imread(self.data_list[index][1], 0)
+        #flair (0)
+        flair = cv2.imread(self.data_list[index][0], 0)
+        #t1 (1)
+        t1 = cv2.imread(self.data_list[index][1], 0)
+        #t1ce (2)
+        t1ce = cv2.imread(self.data_list[index][2], 0)
+        #t2 (3)
+        t2 = cv2.imread(self.data_list[index][3], 0)
+        #seg (4)
+        mask = cv2.imread(self.data_list[index][4], 0)
         mask[mask == 4] = 3
 
-        img = torch.from_numpy(img).unsqueeze(0).float()
+        flair = torch.from_numpy(flair).unsqueeze(0).float()
+        t1 = torch.from_numpy(t1).unsqueeze(0).float()
+        t1ce = torch.from_numpy(t1ce).unsqueeze(0).float()
+        t2 = torch.from_numpy(t2).unsqueeze(0).float()
+        img = torch.cat([flair, t1, t1ce, t2], dim=0)
+
         mask = torch.from_numpy(mask).int().type("torch.LongTensor")
 
         if self.transforms is not None:
             img = self.transforms(img)
             mask = self.transforms(mask)
 
-        return img, mask
-
-
-
-#GENERAL DATASET
-class GeneralDataSet(data.Dataset):
-    def __init__(self, data_list, img_ch=1, mask_ch=1, transforms=None):
-        """Creates dataset for segmentation tasks. \n
-            Args:
-                - data_list (list): path to the datas. data_list format should be [[img1, mask1], [img2, mask2], .... [imgn, maskn]]
-                - img_ch (int): channels of input image     1: gray scale   3: rgb
-                    Default: 1
-                - mask_ch (int): channels of mask image     1: gray scale   3: rgb
-                    Default: 1
-                - transforms (Transforms): transforms to be applied to the input and mask images.
-                    Default: None
-        """
-        self.data_list = data_list
-        self.transforms = transforms
-        self.img_ch = img_ch
-        self.mask_ch = mask_ch
-        
-
-    def __len__(self):
-        return len(self.data_list)
-
-    
-    def forward(self, index):
-        if(self.img_ch == 1):
-            img = cv2.imread(self.data_list[index][0], cv2.IMREAD_GRAYSCALE)
-            img = torch.from_numpy(img).float().unsqueeze(0) / img.max()
-
-        elif(self.img_ch == 3):
-            img = cv2.imread(self.data_list[index][0])
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            img = torch.from_numpy(img).float() / img.max()
-            img = torch.permute(img, (2, 0, 1))
-
-        if(self.mask_ch == 1):
-            mask = cv2.imread(self.data_list[index][1], cv2.IMREAD_GRAYSCALE)
-            mask = torch.from_numpy(mask).int().unsqueeze(0)
-
-        elif(self.mask_ch == 3):
-            mask = cv2.imread(self.data_list[index][1])
-            mask = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)
-            mask = torch.from_numpy(mask).int()
-            mask = torch.permute(mask, (2, 0, 1))
-
-        if self.transforms is not None:
-            img = self.transforms(img)
-            mask = self.transforms(mask)
-        
         return img, mask

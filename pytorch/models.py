@@ -5,7 +5,7 @@ import config
 
 from model_blocks import *
 import functional
-
+import plot
 
 
 #BASIC UNET MODEL
@@ -190,7 +190,7 @@ class SegmentationModels:
         self.test_loader = None
 
         self.optimizer = None
-        self.criterions = None
+        self.criterion = None
         self.metrics = None
         self.callbacks = None
 
@@ -207,7 +207,7 @@ class SegmentationModels:
 
 
     #Compile
-    def compile(self, epochs, optimizer, criterions, metrics, callbacks, is_init=True):
+    def compile(self, epochs, optimizer, criterion, metrics, callbacks, is_init=True):
         """Trains model. \n
             Args:
                 - epochs (int): number of epochs.
@@ -221,8 +221,8 @@ class SegmentationModels:
                 >>> model.fit(train_loader, val_loader)
                 >>> model.compile(20, 32, optimizer, criterion)
         """
-        if not hasattr(criterions, "__len__"):
-            criterions = [criterions]
+        if not hasattr(criterion, "__len__"):
+            criterion = [criterion]
         
         if not hasattr(metrics, "__len__"):
             metrics = [metrics]
@@ -231,14 +231,14 @@ class SegmentationModels:
             callbacks = [callbacks]
 
         self.optimizer = optimizer
-        self.criterions = criterions
+        self.criterion = criterion
         self.metrics = metrics
         self.callbacks = callbacks
 
-        self.train_accum = functional.Accumulator(self.criterions, self.metrics)
-        self.val_accum = functional.Accumulator(self.criterions, self.metrics)
+        self.train_accum = functional.Accumulator(self.criterion, self.metrics)
+        self.val_accum = functional.Accumulator(self.criterion, self.metrics)
 
-        functional.train_net(self.train_loader, self.val_loader, self.train_accum, self.val_accum,  self.model, self.optimizer, self.criterions, self.metrics, self.callbacks, epochs, self.training_print, is_init)
+        functional.train_net(self.train_loader, self.val_loader, self.train_accum, self.val_accum,  self.model, self.optimizer, self.criterion, self.metrics, self.callbacks, epochs, self.training_print, is_init)
         
 
     #Predict
@@ -249,9 +249,9 @@ class SegmentationModels:
                 - path (str): path where predictions will be saved.
         """
         self.test_loader = test_loader
-        self.test_accum = functional.Accumulator(self.criterions, self.metrics)
+        self.test_accum = functional.Accumulator(self.criterion, self.metrics)
 
-        functional.predict_test(self.test_loader, self.test_accum, self.model, self.criterions, self.metrics)
+        functional.predict_test(self.test_loader, self.test_accum, self.model, self.criterion, self.metrics)
         self.test_print()
     
 
@@ -284,6 +284,10 @@ class SegmentationModels:
         print(message_test)
 
 
+    #History
+    def history(self):
+        plot.history_plot(self.test_accum, self.val_accum)
+        
 
     #Param Upload
     def param_upload(self, path):
