@@ -21,13 +21,13 @@ def accum(accumulator):
 
 
 #Train Epoch
-def train_epoch(train_loader, accumulator, model, optimizer, criterions, metrics):
+def train_epoch(train_loader, accumulator, model, optimizer, criterion, metrics):
     """Trains single epoch. \n
         Args:
             - train_loader (DataLoader): train dataset loader.
             - accumulator (Accumulator): accumulator for losses and metrics.
             - model (Model): segmentation model.
-            - criterions: loss function.
+            - criterion: loss function.
             - optimizer: optimization function.
             - metrics: metrics for model's evaluation.
     """
@@ -40,11 +40,11 @@ def train_epoch(train_loader, accumulator, model, optimizer, criterions, metrics
         prediction = model(image)
         
         losses = 0
-        for i, loss in enumerate(criterions):
+        for i, loss in enumerate(criterion):
             l = loss(prediction, label)
             losses += l
             accumulator.add_losses(l, i)
-        losses = losses / len(criterions)
+        losses = losses / len(criterion)
         
         for i, metric in enumerate(metrics):
             accumulator.add_metrics(metric(prediction, label), i)
@@ -62,13 +62,13 @@ def train_epoch(train_loader, accumulator, model, optimizer, criterions, metrics
 
 
 #Validate Epoch
-def validate_epoch(val_loader, accumulator, model, criterions, metrics):
+def validate_epoch(val_loader, accumulator, model, criterion, metrics):
     """Trains single epoch. \n
         Args:
             - val_loader (DataLoader): validation dataset loader.
             - accumulator (Accumulator): accumulator for losses and metrics.
             - model (Model): segmentation model.
-            - criterions: loss function.
+            - criterion: loss function.
             - metrics: metrics for model's evaluation.
     """
     model.eval()
@@ -81,7 +81,7 @@ def validate_epoch(val_loader, accumulator, model, criterions, metrics):
             label = label.to(config.DEVICE)
             prediction = model(image)
 
-        for i, loss in enumerate(criterions):
+        for i, loss in enumerate(criterion):
             accumulator.add_losses(loss(prediction, label), i)
         
         for i, metric in enumerate(metrics):
@@ -95,7 +95,7 @@ def validate_epoch(val_loader, accumulator, model, criterions, metrics):
 
 
 #Train Net
-def train_net(train_loader, val_loader, train_accum, val_accum, model, optimizer, criterions, metrics, callbacks, num_epochs, plot_fn, is_init=True):
+def train_net(train_loader, val_loader, train_accum, val_accum, model, optimizer, criterion, metrics, callbacks, num_epochs, plot_fn, is_init=True):
     """Trains model as long as number of epochs. \n
         Args:
             - train_loader (DataLoader): training dataset loader.
@@ -104,7 +104,7 @@ def train_net(train_loader, val_loader, train_accum, val_accum, model, optimizer
             - val_accum (Accumulator): accumulator for validation scores.
             - model (Model): segmentation model.
             - optimizer: optimization function.
-            - criterions: loss function.
+            - criterion: loss function.
             - metrics: metrics for model's evaluation.
             - num_epochs (int): number of epochs.
             - plot_fn: prints train's and validation's losses and metrics.
@@ -113,8 +113,8 @@ def train_net(train_loader, val_loader, train_accum, val_accum, model, optimizer
         model.apply(init_weights)
 
     for epoch in range(num_epochs):
-        train_epoch(train_loader, train_accum, model, optimizer, criterions, metrics)
-        validate_epoch(val_loader, val_accum, model, criterions, metrics)
+        train_epoch(train_loader, train_accum, model, optimizer, criterion, metrics)
+        validate_epoch(val_loader, val_accum, model, criterion, metrics)
         
         print(f"Epoch {epoch + 1}")
         plot_fn()
@@ -124,13 +124,13 @@ def train_net(train_loader, val_loader, train_accum, val_accum, model, optimizer
 
 
 #Predict Test
-def predict_test(test_loader, accumulator, model, criterions, metrics):
+def predict_test(test_loader, accumulator, model, criterion, metrics):
     """Predicts test dataset. \n
         Args:
             - test_loader (DataLoader): test dataset loader.
             - accumulator (Accumulator): accumulator for losses and metrics.
             - model (Model): segmentation model.
-            - criterions: loss functions.
+            - criterion: loss functions.
             - metrics: metric functions.
             - path (str): path where predicted images will be saved.
     """
@@ -149,7 +149,7 @@ def predict_test(test_loader, accumulator, model, criterions, metrics):
             plot.plot(image, label, prediction, 3, 4)
             is_plot = False
 
-        for i, loss in enumerate(criterions):
+        for i, loss in enumerate(criterion):
             accumulator.add_losses(loss(prediction, label), i)
     
         for i, metric in enumerate(metrics):
@@ -233,18 +233,18 @@ class OneHotEncoder:
 
 #ACCUMULATOR
 class Accumulator:
-    def __init__(self, criterions, metrics):
+    def __init__(self, criterion, metrics):
         """Accumulates train's and validation's loss values and metric scores for each iter. \n
             Args:
-                - criterions (list): criterion's functions list.
+                - criterion (list): criterion's functions list.
                 - metrics (list): metric's functions list.
         """
-        self.criterion_scores = np.array([0.0] * len(criterions))
+        self.criterion_scores = np.array([0.0] * len(criterion))
         self.metric_scores = np.array([0.0] * len(metrics))
-        self.criterion_names = self.get_names(criterions)
+        self.criterion_names = self.get_names(criterion)
         self.metric_names = self.get_names(metrics)
 
-        self.all_losses = [[] for _ in range(len(criterions))]
+        self.all_losses = [[] for _ in range(len(criterion))]
         self.all_metrics = [[] for _ in range(len(metrics))]
 
     #Add Losses
@@ -274,7 +274,7 @@ class Accumulator:
 
     #Create Dict
     def get_names(self, input):
-        """Gets criterions' and metrics' function name. \n
+        """Gets criterion' and metrics' function name. \n
             Args:
                 - input (list): input list.
         """

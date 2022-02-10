@@ -69,22 +69,24 @@ def plot(input, ground_truth, prediction, n_rows, n_cols):
 
 
 
-def history_plot(train_accum, val_accum, num_epoch):
-    x_range = range(1, num_epoch + 1)
-
+def history_plot(train_accum, val_accum):
+    x_range_l = range(1, len(train_accum.all_losses) + 1)
     len_criterion = len(train_accum.criterion_names)
-    fig_criterion, axis_criterion = plt.subplots(1, len_criterion, sharex=True)
+    
+    fig_criterion, axis_criterion = plt.subplots(1, len_criterion, sharex=True, figsize=(5 * len_criterion, 5))
     fig_criterion.suptitle("Criterion Losses per each epoch")
     for i in range(len_criterion):
         axis_criterion[i].title.set_text(train_accum.criterion_names[i])
-        axis_criterion[i].plot(x_range, train_accum.all_losses[i])
-        axis_criterion[i].plot(x_range, val_accum.all_losses[i])
+        axis_criterion[i].plot(x_range_l, train_accum.all_losses[i])
+        axis_criterion[i].plot(x_range_l, val_accum.all_losses[i])
 
-
+    
+    x_range_m = range(1, len(train_accum.all_metrics) + 1)
     len_metrics = len(train_accum.metric_names)
-    fig_metrics, axis_metrics = plt.subplots(1, len_metrics, sharex=True)
+
+    fig_metrics, axis_metrics = plt.subplots(1, len_metrics, sharex=True, figsize=(5 * len_metrics, 5))
     fig_metrics.suptitle("Metric Scores per each epoch")
     for i in range(len_metrics):
         axis_metrics[i].title.set_text(train_accum.metric_names[i])
-        axis_metrics[i].plot(x_range, train_accum.all_metrics[i])
-        axis_metrics[i].plot(x_range, val_accum.all_metrics[i])
+        axis_metrics[i].plot(x_range_m, train_accum.all_metrics[i])
+        axis_metrics[i].plot(x_range_m, val_accum.all_metrics[i])
