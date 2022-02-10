@@ -18,11 +18,14 @@ def read_data_paths(main_path):
                 0: all data
         """
     flair_paths = os.path.join(main_path, "*", "*_flair", "*.png")
+    t1_paths = os.path.join(main_path, "*", "*_t1", "*.png")
+    t1ce_paths = os.path.join(main_path, "*", "*t1ce", "*.png")
+    t2_paths = os.path.join(main_path, "*", "*_t2", "*.png")
     seg_paths = os.path.join(main_path, "*", "*_seg", "*.png")
 
     data_list = []
-    for flair_path, seg_path in zip(glob.glob(flair_paths), glob.glob(seg_paths)):
-        data_list.append([flair_path, seg_path])
+    for flair_path, t1_path, t1ce_path, t2_path, seg_path in zip(glob.glob(flair_paths), glob.glob(t1_paths), glob.glob(t1ce_paths), glob.glob(t2_paths), glob.glob(seg_paths)):
+        data_list.append([flair_path, t1_path, t1ce_path, t2_path, seg_path])
 
     return data_list
 
@@ -70,14 +73,22 @@ class BratsDataset(data.Dataset):
 
     def __getitem__(self, index):
         flair = cv2.imread(self.data_list[index][0], 0)
-        mask = cv2.imread(self.data_list[index][1], 0)
+        t1 = cv2.imread(self.data_list[index][1], 0)
+        t1ce = cv2.imread(self.data_list[index][2], 0)
+        t2 = cv2.imread(self.data_list[index][3], 0)
+        mask = cv2.imread(self.data_list[index][4], 0)
         mask[mask == 4] = 3
 
         flair = torch.from_numpy(flair).unsqueeze(0).float()
+        t1 = torch.from_numpy(t1).unsqueeze(0).float()
+        t1ce = torch.from_numpy(t1ce).unsqueeze(0).float()
+        t2 = torch.from_numpy(t2).unsqueeze(0).float()
+
+        img = torch.cat([flair, t1, t1ce, t2], dim=0)
         mask = torch.from_numpy(mask).int().type("torch.LongTensor")
 
         if self.transforms is not None:
-            flair = self.transforms(flair)
+            img = self.transforms(img)
             mask = self.transforms(mask)
 
-        return flair, mask
+        return img, mask
