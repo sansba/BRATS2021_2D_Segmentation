@@ -237,7 +237,7 @@ class ArrDown(nn.Module):
 
         self.down_list = []
         self.down = nn.Sequential(nn.MaxPool2d(2, 2), ArrDoubleConv(in_ch, channel))
-        self.conv_out = nn.Sequential(nn.BatchNorm2d(channel * depth), nn.ReLU(inplace=True), DoubleConv(channel * depth, channel * depth))
+        self.conv_out = nn.Sequential(nn.BatchNorm2d(channel * depth), nn.ReLU(inplace=True))
 
         for i in range(self.depth - 1):
             self.down_list.append(nn.Sequential(nn.MaxPool2d(2 ** (self.depth - i - 1)), nn.Conv2d(in_channels=channel * (i + 1), out_channels=64, kernel_size=3, padding="same")))
@@ -272,7 +272,7 @@ class ArrUp(nn.Module):
         self.up_list = []
         self.up = nn.Sequential(nn.ConvTranspose2d(in_channels=in_ch, out_channels=channel * 4, kernel_size=2, stride=2), ArrDoubleConv(channel * 4, channel * 4))
         self.conv = nn.Conv2d(in_channels=channel * depth, out_channels=channel, kernel_size=3, padding="same")
-        self.conv_out = nn.Sequential(nn.BatchNorm2d(channel * (10 - depth)), nn.ReLU(inplace=True), DoubleConv(channel * (10 - depth), channel * (10 - depth)))
+        self.conv_out = nn.Sequential(nn.BatchNorm2d(channel * (10 - depth)), nn.ReLU(inplace=True))
 
         for i in range(5, self.depth, -1):
             self.up_list.append(nn.Sequential(nn.ConvTranspose2d(in_channels=channel * (10 - i), out_channels=channel, kernel_size=2 ** (i - self.depth), stride=2 ** (i - self.depth)), nn.Conv2d(in_channels=channel, out_channels=channel, kernel_size=3, padding="same")))

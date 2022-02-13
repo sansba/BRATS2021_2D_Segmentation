@@ -24,7 +24,7 @@ def read_data_paths(main_path):
     seg_paths = os.path.join(main_path, "*", "*_seg", "*.png")
 
     data_list = []
-    for flair_path, t1_path, t1ce_path, t2_path, seg_path in zip(glob.glob(flair_paths), glob.glob(t1_paths), glob.glob(t1ce_paths), glob.glob(t2_paths), glob.glob(seg_paths)):
+    for flair_path, t1_path, t1ce_path, t2_path, seg_path in zip(sorted(glob.glob(flair_paths)), sorted(glob.glob(t1_paths)), sorted(glob.glob(t1ce_paths)), sorted(glob.glob(t2_paths)), sorted(glob.glob(seg_paths))):
         data_list.append([flair_path, t1_path, t1ce_path, t2_path, seg_path])
 
     return data_list

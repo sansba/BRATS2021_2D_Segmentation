@@ -81,12 +81,14 @@ def history_plot(train_accum, val_accum):
             axis_criterion[i].title.set_text(train_accum.criterion_names[i])
             axis_criterion[i].plot(x_range_l, train_accum.all_losses[i])
             axis_criterion[i].plot(x_range_l, val_accum.all_losses[i])
+            axis_criterion[i].legend(["Train", "Val"])
 
     else:
         plt.suptitle("Criterion Losses per each epoch")
         plt.title(train_accum.criterion_names[0])
         plt.plot(x_range_l, train_accum.all_losses[0])
         plt.plot(x_range_l, val_accum.all_losses[0])
+        plt.legend(["Train", "Val"])
         plt.figure(figsize=(5, 5))
 
     
@@ -101,10 +103,12 @@ def history_plot(train_accum, val_accum):
             axis_metrics[i].title.set_text(train_accum.metric_names[i])
             axis_metrics[i].plot(x_range_m, train_accum.all_metrics[i])
             axis_metrics[i].plot(x_range_m, val_accum.all_metrics[i])
+            axis_metrics[i].legend(["Train", "Val"])
 
     else:
         plt.suptitle("Metric Scores per each epoch")
         plt.title(train_accum.metric_names[0])
         plt.plot(x_range_m, train_accum.all_metrics[0])
         plt.plot(x_range_m, val_accum.all_metrics[0])
+        plt.legend(["Train", "Val"])
         plt.figure(figsize=(5, 5))
