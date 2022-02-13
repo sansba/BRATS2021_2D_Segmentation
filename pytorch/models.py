@@ -182,7 +182,7 @@ class ArrowUNet(nn.Module):
         x2_de = self.up3(x2_en, x5_en, x4_de, x3_de)
         x1_de = self.up4(x1_en, x5_en, x4_de, x3_de, x2_de)
         
-        return self.outconv(x1_de).to(config.DEVICE)
+        return self.outconv(x1_de)
 
 
 
