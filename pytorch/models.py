@@ -53,6 +53,51 @@ class UNet(nn.Module):
 
 
 
+#EXPANDED UNET MODEL
+class ExpandedUNet(nn.Module):
+    def __init__(self, in_ch, n_classes):
+        """Basic UNet Model. \n
+            Args:
+                - in_ch (int): input channel of input image.
+                - n_classes (int): number of classes. 
+        """
+        super(ExpandedUNet, self).__init__()
+        self.in_ch = in_ch
+        self.n_classes = n_classes
+        channel = 64
+        
+        self.inconv = ExpInConv(in_ch, channel)
+        
+        self.down1 = ExpDown(channel, channel * 2)
+        self.down2 = ExpDown(channel * 2, channel * 4)
+        self.down3 = ExpDown(channel * 4, channel * 8)
+        self.down4 = ExpDown(channel * 8, channel * 16)
+
+        self.up1 = ExpUp(channel * 16, channel * 8)
+        self.up2 = ExpUp(channel * 8, channel * 4)
+        self.up3 = ExpUp(channel * 4, channel * 2)
+        self.up4 = ExpUp(channel * 2, channel)
+
+        self.outconv = OutConv(channel, n_classes)
+
+
+    def forward(self, x):
+        x1 = self.inconv(x)
+        x2 = self.down1(x1)
+        x3 = self.down2(x2)
+        x4 = self.down3(x3)
+        x5 = self.down4(x4)
+
+        x = self.up1(x5, x4)
+        x = self.up2(x, x3)
+        x = self.up3(x, x2)
+        x = self.up4(x, x1)
+        x = self.outconv(x)
+
+        return x
+
+
+
 
 #INCEPTION UNET MODEL
 class InceptionUNet(nn.Module):
@@ -109,36 +154,92 @@ class ArrowUNet(nn.Module):
         super(ArrowUNet, self).__init__()
         self.in_ch = in_ch
         self.n_classes = n_classes
-        channel = 63
+        channel = 64
 
-        self.inconv = ArrInConv(in_ch, channel)
+        self.inconv = InConv(in_ch, channel)
 
-        self.down1 = ArrDown(channel, channel * 2)
-        self.down2 = ArrDown(channel * 2, channel * 4)
-        self.down3 = ArrDown(channel * 4, channel * 8)
-        self.down4 = ArrDown(channel * 8, channel * 16)
+        self.down1 = ArrDown(channel, 2)
+        self.down2 = ArrDown(channel * 2, 3)
+        self.down3 = ArrDown(channel * 3, 4)
+        self.down4 = ArrDown(channel * 4, 5)
 
-        self.up1 = ArrUp(channel * 16, channel * 8)
-        self.up2 = ArrUp(channel * 8, channel * 4)
-        self.up3 = ArrUp(channel * 4, channel * 2)
-        self.up4 = ArrUp(channel * 2, channel)
+        self.up1 = ArrUp(channel * 5, 4)
+        self.up2 = ArrUp(channel * 6, 3)
+        self.up3 = ArrUp(channel * 7, 2)
+        self.up4 = ArrUp(channel * 8, 1)
 
-        self.outconv = ArrOutConv(channel, n_classes)
+        self.outconv = OutConv(channel * 9, n_classes)
 
     def forward(self, x):
-        x1 = self.inconv(x)
-        x2 = self.down1(x1)
-        x3 = self.down2(x2)
-        x4 = self.down3(x3)
-        x5 = self.down4(x4)
+        x1_en = self.inconv(x)
+        x2_en = self.down1(x1_en)
+        x3_en = self.down2(x1_en, x2_en)
+        x4_en = self.down3(x1_en, x2_en, x3_en)
+        x5_en = self.down4(x1_en, x2_en, x3_en, x4_en)
 
-        x = self.up1(x5, x4)
-        x = self.up2(x, x3)
-        x = self.up3(x, x2)
-        x = self.up4(x, x1)
-        x = self.outconv(x)
+        x4_de = self.up1(x4_en, x5_en)
+        x3_de = self.up2(x3_en, x5_en, x4_de)
+        x2_de = self.up3(x2_en, x5_en, x4_de, x3_de)
+        x1_de = self.up4(x1_en, x5_en, x4_de, x3_de, x2_de)
+        
+        return self.outconv(x1_de)
 
-        return x
+
+
+#UNET 3+ MODEL
+class UNet3P(nn.Module):
+    def __init__(self, in_ch, n_classes):
+        """Arrow UNet Model. \n
+            Args:
+                - in_ch (int): input channel of input image.
+                - n_classes (int): number of classes. 
+        """
+        super(UNet3P, self).__init__()
+        self.in_ch = in_ch
+        self.n_classes = n_classes
+        self.channel = 64
+        
+        self.inconv = InConv(in_ch, self.channel)
+        
+        self.down1 = Down(self.channel, self.channel * 2)
+        self.down2 = Down(self.channel * 2, self.channel * 4)
+        self.down3 = Down(self.channel * 4, self.channel * 8)
+        self.down4 = Down(self.channel * 8, self.channel * 16)
+
+
+        self.up1 = ThreeUp(4)
+        self.up2 = ThreeUp(3)
+        self.up3 = ThreeUp(2)
+        self.up4 = ThreeUp(1)
+
+        self.outconv = ThreeOut(self.channel, n_classes)
+        self.outconv1 = nn.Sequential(nn.Conv2d(in_channels=1024, out_channels=n_classes, kernel_size=1), nn.AdaptiveMaxPool2d(160), nn.Sigmoid())
+
+
+    def forward(self, x):
+        x1_en = self.inconv(x)
+        x2_en = self.down1(x1_en)
+        x3_en = self.down2(x2_en)
+        x4_en = self.down3(x3_en)
+        x5_en = self.down4(x4_en)
+
+        x4_de = self.up1(x1_en, x2_en, x3_en, x4_en, x5_en)
+        x3_de = self.up2(x1_en, x2_en, x3_en, x4_de, x5_en)
+        x2_de = self.up3(x1_en, x2_en, x3_de, x4_de, x5_en)
+        x1_de = self.up4(x1_en, x2_de, x3_de, x4_de, x5_en)
+
+        out1 = self.outconv(x1_de)
+        out2 = self.outconv(x2_de)
+        out3 = self.outconv(x3_de)
+        out4 = self.outconv(x4_de)
+        out5 = self.outconv1(x5_en)
+
+        x1 = torch.mean(torch.cat([out1[:, 0].unsqueeze(1), out2[:, 0].unsqueeze(1), out3[:, 0].unsqueeze(1), out4[:, 0].unsqueeze(1), out5[:, 0].unsqueeze(1)], dim=1), dim=1).unsqueeze(1)
+        x2 = torch.mean(torch.cat([out1[:, 1].unsqueeze(1), out2[:, 1].unsqueeze(1), out3[:, 1].unsqueeze(1), out4[:, 1].unsqueeze(1), out5[:, 1].unsqueeze(1)], dim=1), dim=1).unsqueeze(1)
+        x3 = torch.mean(torch.cat([out1[:, 2].unsqueeze(1), out2[:, 2].unsqueeze(1), out3[:, 2].unsqueeze(1), out4[:, 2].unsqueeze(1), out5[:, 2].unsqueeze(1)], dim=1), dim=1).unsqueeze(1)
+        x4 = torch.mean(torch.cat([out1[:, 3].unsqueeze(1), out2[:, 3].unsqueeze(1), out3[:, 3].unsqueeze(1), out4[:, 3].unsqueeze(1), out5[:, 3].unsqueeze(1)], dim=1), dim=1).unsqueeze(1)
+
+        return torch.cat([x1, x2, x3, x4], dim=1)
 
 
 
@@ -148,12 +249,12 @@ class SegmentationModels:
     def __init__(self, model_name, in_ch, n_classes):
         """General class for segmentation models. \n
             Args:
-                - model_name (str): model selection ('unet', 'incunet', 'arrowunet').
+                - model_name (str): model selection ('unet', 'expanded', 'inception', 'arrow', 'unet3+').
                 - in_ch (int): input channel of input image.
                 - n_classes (int): number of classes.
                 - L (int): deepness of model
         """
-        self.models = {"unet":UNet, "inception":InceptionUNet, "arrow":ArrowUNet}
+        self.models = {"unet":UNet, "expanded":ExpandedUNet, "inception":InceptionUNet, "arrow":ArrowUNet, "unet3+":UNet3P}
         self.model_name = model_name
 
         #Not In the List Error

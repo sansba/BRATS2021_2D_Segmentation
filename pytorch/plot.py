@@ -71,7 +71,7 @@ def plot(input, ground_truth, prediction, n_rows, n_cols):
 
 def history_plot(train_accum, val_accum):
     #LOSSES
-    x_range_l = range(1, len(train_accum.all_losses) + 1)
+    x_range_l = range(1, len(train_accum.all_losses[0]) + 1)
     len_criterion = len(train_accum.criterion_names)
 
     if len_criterion > 1:
@@ -91,7 +91,7 @@ def history_plot(train_accum, val_accum):
 
     
     #METRICS
-    x_range_m = range(1, len(train_accum.all_metrics) + 1)
+    x_range_m = range(1, len(train_accum.all_metrics[0]) + 1)
     len_metrics = len(train_accum.metric_names)
 
     if len_metrics > 1:
