@@ -12,7 +12,7 @@ import plot
 
 def accum(accumulator):
     for i, criterion in enumerate(accumulator.criterion_scores):
-        accumulator.all_losses[i].append(criterion.float())
+        accumulator.all_losses[i].append(criterion)
 
     for i, metric in enumerate(accumulator.metric_scores):
         accumulator.all_metrics[i].append(metric)
