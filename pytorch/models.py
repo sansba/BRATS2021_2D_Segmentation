@@ -124,7 +124,7 @@ class DilationUNet(nn.Module):
         self.up3 = DilUp(channel * 4, channel * 2)
         self.up4 = DilUp(channel * 2, channel)
 
-        self.outconv = DilOutConv(channel, n_classes)
+        self.outconv = OutConv(channel, n_classes)
 
     def forward(self, x):
         x1 = self.inconv(x)
@@ -186,7 +186,7 @@ class ArrowUNet(nn.Module):
 
 
 
-#UNET 3+ MODEL
+#DILATION+ UNET MODEL
 class DilationPlusUNet(nn.Module):
     def __init__(self, in_ch, n_classes):
         """Dilation+ UNet Model. \n
@@ -211,7 +211,51 @@ class DilationPlusUNet(nn.Module):
         self.up3 = DilPlusUp(channel * 4, channel * 2)
         self.up4 = DilPlusUp(channel * 2, channel)
 
-        self.outconv = DilOutConv(channel, n_classes)
+        self.outconv = OutConv(channel, n_classes)
+
+
+    def forward(self, x):
+        x1 = self.inconv(x)
+        x2 = self.down1(x1)
+        x3 = self.down2(x2)
+        x4 = self.down3(x3)
+        x5 = self.down4(x4)
+
+        x = self.up1(x5, x4)
+        x = self.up2(x, x3)
+        x = self.up3(x, x2)
+        x = self.up4(x, x1)
+        x = self.outconv(x)
+
+        return x
+
+
+#DILATION++ UNET MODEL
+class Dilation2PlusUNet(nn.Module):
+    def __init__(self, in_ch, n_classes):
+        """Dilation+ UNet Model. \n
+            Args:
+                - in_ch (int): input channel of input image.
+                - n_classes (int): number of classes. 
+        """
+        super(Dilation2PlusUNet, self).__init__()
+        self.in_ch = in_ch
+        self.n_classes = n_classes
+        channel = 64
+        
+        self.inconv = Dil2PlusInConv(in_ch, channel)
+
+        self.down1 = Dil2PlusDown(channel, channel * 2)
+        self.down2 = Dil2PlusDown(channel * 2, channel * 4)
+        self.down3 = Dil2PlusDown(channel * 4, channel * 8)
+        self.down4 = Dil2PlusDown(channel * 8, channel * 16)
+
+        self.up1 = Dil2PlusUp(channel * 16, channel * 8)
+        self.up2 = Dil2PlusUp(channel * 8, channel * 4)
+        self.up3 = Dil2PlusUp(channel * 4, channel * 2)
+        self.up4 = Dil2PlusUp(channel * 2, channel)
+
+        self.outconv = OutConv(channel, n_classes)
 
 
     def forward(self, x):
@@ -237,12 +281,12 @@ class SegmentationModels:
     def __init__(self, model_name, in_ch, n_classes):
         """General class for segmentation models. \n
             Args:
-                - model_name (str): model selection ('unet', 'expanded', 'dilation', 'arrow', 'dilation+').
+                - model_name (str): model selection ('unet', 'expanded', 'dilation', 'arrow', 'dilation+', 'dilation++').
                 - in_ch (int): input channel of input image.
                 - n_classes (int): number of classes.
                 - L (int): deepness of model
         """
-        self.models = {"unet":UNet, "expanded":ExpandedUNet, "dilation":DilationUNet, "arrow":ArrowUNet, "dilation+":DilationPlusUNet}
+        self.models = {"unet":UNet, "expanded":ExpandedUNet, "dilation":DilationUNet, "arrow":ArrowUNet, "dilation+":DilationPlusUNet, "dilation++":Dilation2PlusUNet}
         self.model_name = model_name
 
         #Not In the List Error

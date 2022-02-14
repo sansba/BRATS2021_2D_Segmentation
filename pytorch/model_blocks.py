@@ -105,10 +105,10 @@ class DilationBlock(nn.Module):
            - out_ch (int): output channel of the convolution layer.
         """
         super(DilationBlock, self).__init__()
-        self.x1 = nn.Sequential(nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=3, padding="same", dilation=1), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True))
-        self.x2 = nn.Sequential(nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=3, padding="same", dilation=2), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True))
-        self.x3 = nn.Sequential(nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=3, padding="same", dilation=3), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True))
-        self.x4 = nn.Sequential(nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=3, padding="same", dilation=4), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True))
+        self.x1 = nn.Sequential(nn.Conv2d(in_channels=in_ch, out_channels=out_ch // 4, kernel_size=3, padding="same", dilation=1), nn.BatchNorm2d(out_ch // 4), nn.ReLU(inplace=True))
+        self.x2 = nn.Sequential(nn.Conv2d(in_channels=in_ch, out_channels=out_ch // 4, kernel_size=3, padding="same", dilation=2), nn.BatchNorm2d(out_ch // 4), nn.ReLU(inplace=True))
+        self.x3 = nn.Sequential(nn.Conv2d(in_channels=in_ch, out_channels=out_ch // 4, kernel_size=3, padding="same", dilation=3), nn.BatchNorm2d(out_ch // 4), nn.ReLU(inplace=True))
+        self.x4 = nn.Sequential(nn.Conv2d(in_channels=in_ch, out_channels=out_ch // 4, kernel_size=3, padding="same", dilation=4), nn.BatchNorm2d(out_ch // 4), nn.ReLU(inplace=True))
 
     def forward(self, x):
         x1 = self.x1(x)
@@ -128,8 +128,8 @@ class DilDoubleConv(nn.Module):
            - out_ch (int): output channel of the first and second convolution layer and input channel of the second convolution layer.
         """
         super(DilDoubleConv, self).__init__()
-        self.conv = nn.Sequential(DilationBlock(in_ch, out_ch // 4), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True),
-                                DilationBlock(out_ch, out_ch // 4), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True))
+        self.conv = nn.Sequential(DilationBlock(in_ch, out_ch), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True),
+                                DilationBlock(out_ch, out_ch), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True))
 
     def forward(self, x):
         return self.conv(x)
@@ -187,21 +187,6 @@ class DilUp(nn.Module):
                         -(diffY // 2), -(diffY - diffY // 2)))
         x = torch.cat([x2, x1], dim=1)
         
-        return self.conv(x)
-
-
-#Out Convolution
-class DilOutConv(nn.Module):
-    def __init__(self, in_ch, out_ch):
-        """Output Convolution Layer for Dilation UNet Model. \n
-           Args:
-           - in_ch (int): input channel of the convolution layer.
-           - out_ch (int): output channel of the convolution layer.
-        """
-        super(DilOutConv, self).__init__()
-        self.conv = nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=1)
-        
-    def forward(self, x):
         return self.conv(x)
 
 
@@ -377,7 +362,7 @@ class DilationPlusBlock(nn.Module):
         return x
 
 
-#Dilation+ Skip Connection
+#Dilation+ Double Convolution
 class DilPlusDoubleConv(nn.Module):
     def __init__(self, in_ch, out_ch):
         super(DilPlusDoubleConv, self).__init__()
@@ -435,6 +420,80 @@ class DilPlusUp(nn.Module):
         super(DilPlusUp, self).__init__()
         self.up = nn.ConvTranspose2d(in_channels=in_ch, out_channels=in_ch // 2, kernel_size=2, stride=2)
         self.conv = DilPlusDoubleConv(in_ch, out_ch)
+
+    def forward(self, x1, x2):
+        x1 = self.up(x1)
+
+        diffX = x2.size()[3] - x1.size()[3]
+        diffY = x2.size()[2] - x1.size()[2]
+
+        x2 = F.pad(x2, (-(diffX // 2), -(diffX - diffX // 2),
+                        -(diffY // 2), -(diffY - diffY // 2)))
+        x = torch.cat([x2, x1], dim=1)
+        
+        return self.conv(x)
+
+
+
+"""Dilation++ UNet"""
+#Dilation++ Double Convolution
+class Dil2PlusDoubleConv(nn.Module):
+    def __init__(self, in_ch, out_ch):
+        super(Dil2PlusDoubleConv, self).__init__()
+        self.conv1 = nn.Sequential(DilationBlock(in_ch, out_ch // 2), nn.BatchNorm2d(out_ch // 2), nn.ReLU(inplace=True))
+        self.conv2 = nn.Sequential(DilationBlock(out_ch // 2, out_ch // 2), nn.BatchNorm2d(out_ch // 2), nn.ReLU(inplace=True))
+
+
+
+    def forward(self, x):
+        x1 = self.conv1(x)
+        x2 = self.conv2(x1)
+        x = torch.cat([x1, x2], dim=1)
+
+        return x
+
+
+#Input Convolution
+class Dil2PlusInConv(nn.Module):
+    def __init__(self, in_ch, out_ch):
+        """Input Convolution Layer for Dilation++ UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the convolution layer.
+           - out_ch (int): output channel of the first and second convolution layer and input channel of the second convolution layer.
+        """
+        super(Dil2PlusInConv, self).__init__()
+        self.conv = Dil2PlusDoubleConv(in_ch, out_ch)
+    
+    def forward(self, x):
+        return self.conv(x)
+
+
+#Down Sampling
+class Dil2PlusDown(nn.Module):
+    def __init__(self, in_ch, out_ch):
+        """Down Sampling Layer for Dilation++ UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the convolution layer.
+           - out_ch (int): output channel of the first and second convolution layer and input channel of the second convolution layer.
+        """
+        super(Dil2PlusDown, self).__init__()
+        self.down = nn.Sequential(nn.MaxPool2d(2, 2), Dil2PlusDoubleConv(in_ch, out_ch))
+
+    def forward(self, x):
+        return self.down(x)
+
+
+#Up Sampling
+class Dil2PlusUp(nn.Module):
+    def __init__(self, in_ch, out_ch):
+        """Up Sampling Layer for Dilation++ UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the convolution layer.
+           - out_ch (int): output channel of the first and second convolution layer and input channel of the second convolution layer.
+        """
+        super(Dil2PlusUp, self).__init__()
+        self.up = nn.ConvTranspose2d(in_channels=in_ch, out_channels=in_ch // 2, kernel_size=2, stride=2)
+        self.conv = Dil2PlusDoubleConv(in_ch, out_ch)
 
     def forward(self, x1, x2):
         x1 = self.up(x1)
