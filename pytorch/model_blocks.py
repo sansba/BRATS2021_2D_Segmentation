@@ -95,16 +95,16 @@ class OutConv(nn.Module):
 
 
 
-""" INCEPTION BLOCKS"""
-#Inception Block
-class InceptionBlock(nn.Module):
+""" DILATION BLOCKS"""
+#Dilation Block
+class DilationBlock(nn.Module):
     def __init__(self, in_ch, out_ch):
-        """Inception Block for Inception UNet Model. \n
+        """Dilation Block for Dilation UNet Model. \n
            Args:
            - in_ch (int): input channel of the convolution layer.
            - out_ch (int): output channel of the convolution layer.
         """
-        super(InceptionBlock, self).__init__()
+        super(DilationBlock, self).__init__()
         self.x1 = nn.Sequential(nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=3, padding="same", dilation=1), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True))
         self.x2 = nn.Sequential(nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=3, padding="same", dilation=2), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True))
         self.x3 = nn.Sequential(nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=3, padding="same", dilation=3), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True))
@@ -120,62 +120,62 @@ class InceptionBlock(nn.Module):
 
 
 #Double Conv
-class IncDoubleConv(nn.Module):
+class DilDoubleConv(nn.Module):
     def __init__(self, in_ch, out_ch):
-        """Double Inception Convolution for Inception UNet Model. \n
+        """Double Dilation Convolution for Dilation UNet Model. \n
            Args:
            - in_ch (int): input channel of the first convolution layer.
            - out_ch (int): output channel of the first and second convolution layer and input channel of the second convolution layer.
         """
-        super(IncDoubleConv, self).__init__()
-        self.conv = nn.Sequential(InceptionBlock(in_ch, out_ch // 4), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True),
-                                InceptionBlock(out_ch, out_ch // 4), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True))
+        super(DilDoubleConv, self).__init__()
+        self.conv = nn.Sequential(DilationBlock(in_ch, out_ch // 4), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True),
+                                DilationBlock(out_ch, out_ch // 4), nn.BatchNorm2d(out_ch), nn.ReLU(inplace=True))
 
     def forward(self, x):
         return self.conv(x)
 
 
 #Input Convolution
-class IncInConv(nn.Module):
+class DilInConv(nn.Module):
     def __init__(self, in_ch, out_ch):
-        """Input Convolution Layer for Inception UNet Model. \n
+        """Input Convolution Layer for Dilation UNet Model. \n
            Args:
            - in_ch (int): input channel of the convolution layer.
            - out_ch (int): output channel of the first and second convolution layer and input channel of the second convolution layer.
         """
-        super(IncInConv, self).__init__()
-        self.conv = IncDoubleConv(in_ch, out_ch)
+        super(DilInConv, self).__init__()
+        self.conv = DilDoubleConv(in_ch, out_ch)
     
     def forward(self, x):
         return self.conv(x)
 
 
 #Down Sampling
-class IncDown(nn.Module):
+class DilDown(nn.Module):
     def __init__(self, in_ch, out_ch):
-        """Down Sampling Layer for Inception UNet Model. \n
+        """Down Sampling Layer for Dilation UNet Model. \n
            Args:
            - in_ch (int): input channel of the convolution layer.
            - out_ch (int): output channel of the first and second convolution layer and input channel of the second convolution layer.
         """
-        super(IncDown, self).__init__()
-        self.down = nn.Sequential(nn.MaxPool2d(2, 2), IncDoubleConv(in_ch, out_ch))
+        super(DilDown, self).__init__()
+        self.down = nn.Sequential(nn.MaxPool2d(2, 2), DilDoubleConv(in_ch, out_ch))
 
     def forward(self, x):
         return self.down(x)
 
 
 #Up Sampling
-class IncUp(nn.Module):
+class DilUp(nn.Module):
     def __init__(self, in_ch, out_ch):
-        """Up Sampling Layer for Inception UNet Model. \n
+        """Up Sampling Layer for Dilation UNet Model. \n
            Args:
            - in_ch (int): input channel of the convolution layer.
            - out_ch (int): output channel of the first and second convolution layer and input channel of the second convolution layer.
         """
-        super(IncUp, self).__init__()
+        super(DilUp, self).__init__()
         self.up = nn.ConvTranspose2d(in_channels=in_ch, out_channels=in_ch // 2, kernel_size=2, stride=2)
-        self.conv = IncDoubleConv(in_ch, out_ch)
+        self.conv = DilDoubleConv(in_ch, out_ch)
 
     def forward(self, x1, x2):
         x1 = self.up(x1)
@@ -191,14 +191,14 @@ class IncUp(nn.Module):
 
 
 #Out Convolution
-class IncOutConv(nn.Module):
+class DilOutConv(nn.Module):
     def __init__(self, in_ch, out_ch):
-        """Output Convolution Layer for Inception UNet Model. \n
+        """Output Convolution Layer for Dilation UNet Model. \n
            Args:
            - in_ch (int): input channel of the convolution layer.
            - out_ch (int): output channel of the convolution layer.
         """
-        super(IncOutConv, self).__init__()
+        super(DilOutConv, self).__init__()
         self.conv = nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=1)
         
     def forward(self, x):
@@ -292,69 +292,6 @@ class ArrUp(nn.Module):
 
 
 
-
-""" DENSE BLOCKS """
-class ThreeUp(nn.Module):
-    def __init__(self, depth):
-        """Dense Block for Dense UNet Model. \n
-           Args:
-           - depth (int): depth of decoder layer.
-        """
-        super(ThreeUp, self).__init__()
-        self.channel = 64
-        self.depth = depth
-        self.total = 5
-        self.conv_list = nn.ModuleList()
-        self.list = nn.ModuleList()
-
-        self.conv = nn.Sequential(nn.Conv2d(in_channels=self.channel * 5, out_channels=self.channel * 5, kernel_size=3, padding="same"), nn.BatchNorm2d(self.channel * 5), nn.ReLU(inplace=True))
-        
-        for conv in range(1, self.total + 1):
-            self.conv_list.append(nn.Conv2d(in_channels=self.channel * (2 ** (conv - 1)), out_channels=self.channel, kernel_size=3, padding="same"))
-
-        for counter in range(1, self.total + 1):
-            if self.depth > counter:
-                self.list.append(nn.Sequential(nn.MaxPool2d(2 ** (self.depth - counter)), self.conv_list[counter - 1]))
-            elif self.depth == counter:
-                self.list.append(nn.Sequential(self.conv_list[counter - 1]))
-            elif counter == self.total:
-                self.list.append(nn.Sequential(nn.Upsample(scale_factor=2 ** (counter - self.depth), mode="bilinear"), self.conv_list[counter - 1]))
-            else:
-                self.list.append(nn.Sequential(nn.Upsample(scale_factor=2 ** (counter - self.depth), mode="bilinear"), nn.Conv2d(in_channels=self.channel * 5, out_channels=self.channel, kernel_size=3, padding="same")))
-
-
-    def forward(self, *args):
-        """Order: x1, x2, x3, x4, x5 ...
-        """
-        output = []
-
-        for i in range(self.total):
-            x = self.list[i](args[i])
-            output.append(x)
-        
-        x = torch.cat(output, dim=1)
-        
-        return self.conv(x)
-
-
-
-class ThreeOut(nn.Module):
-    def __init__(self, channel, out_ch):
-        """Output Convolution Layer for UNet 3+ Model. \n
-           Args:
-           - in_ch (int): input channel of the convolution layer.
-           - out_ch (int): output channel of the convolution layer.
-        """
-        super(ThreeOut, self).__init__()
-
-        self.channel = channel
-        self.conv = nn.Sequential(nn.Conv2d(in_channels=self.channel * 5, out_channels=out_ch, kernel_size=1), nn.AdaptiveAvgPool2d(160), nn.Sigmoid())
-
-    def forward(self, x):
-        return self.conv(x)
-
-
-
 """Expanded UNet"""
 class TripleConv(nn.Module):
     def __init__(self, in_ch, out_ch):
@@ -420,4 +357,93 @@ class ExpUp(nn.Module):
 
         x = torch.cat([x2, x1], dim=1)
 
+        return self.conv(x)
+
+
+"""DİLATİON+ UNET"""
+#Dilation+ Block
+class DilationPlusBlock(nn.Module):
+    def __init__(self, in_ch, out_ch):
+        super(DilationPlusBlock, self).__init__()
+        self.x1 = nn.Sequential(nn.Conv2d(in_channels=in_ch, out_channels=out_ch // 2, kernel_size=3, padding="same", dilation=1))
+        self.x2 = nn.Sequential(nn.Conv2d(in_channels=in_ch, out_channels=out_ch // 2, kernel_size=3, padding="same", dilation=2))
+
+
+    def forward(self, x):
+        x1 = self.x1(x)
+        x2 = self.x2(x)
+        
+        x = torch.cat([x1, x2], dim=1)
+        return x
+
+
+#Dilation+ Skip Connection
+class DilPlusDoubleConv(nn.Module):
+    def __init__(self, in_ch, out_ch):
+        super(DilPlusDoubleConv, self).__init__()
+        self.conv1 = nn.Sequential(DilationPlusBlock(in_ch, out_ch // 2), nn.BatchNorm2d(out_ch // 2), nn.ReLU(inplace=True))
+        self.conv2 = nn.Sequential(DilationPlusBlock(out_ch // 2, out_ch // 2), nn.BatchNorm2d(out_ch // 2), nn.ReLU(inplace=True))
+
+
+
+    def forward(self, x):
+        x1 = self.conv1(x)
+        x2 = self.conv2(x1)
+        x = torch.cat([x1, x2], dim=1)
+
+        return x
+
+
+#Input Convolution
+class DilPlusInConv(nn.Module):
+    def __init__(self, in_ch, out_ch):
+        """Input Convolution Layer for Dilation+ UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the convolution layer.
+           - out_ch (int): output channel of the first and second convolution layer and input channel of the second convolution layer.
+        """
+        super(DilPlusInConv, self).__init__()
+        self.conv = DilPlusDoubleConv(in_ch, out_ch)
+    
+    def forward(self, x):
+        return self.conv(x)
+
+
+#Down Sampling
+class DilPlusDown(nn.Module):
+    def __init__(self, in_ch, out_ch):
+        """Down Sampling Layer for Dilation+ UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the convolution layer.
+           - out_ch (int): output channel of the first and second convolution layer and input channel of the second convolution layer.
+        """
+        super(DilPlusDown, self).__init__()
+        self.down = nn.Sequential(nn.MaxPool2d(2, 2), DilPlusDoubleConv(in_ch, out_ch))
+
+    def forward(self, x):
+        return self.down(x)
+
+
+#Up Sampling
+class DilPlusUp(nn.Module):
+    def __init__(self, in_ch, out_ch):
+        """Up Sampling Layer for Dilation+ UNet Model. \n
+           Args:
+           - in_ch (int): input channel of the convolution layer.
+           - out_ch (int): output channel of the first and second convolution layer and input channel of the second convolution layer.
+        """
+        super(DilPlusUp, self).__init__()
+        self.up = nn.ConvTranspose2d(in_channels=in_ch, out_channels=in_ch // 2, kernel_size=2, stride=2)
+        self.conv = DilPlusDoubleConv(in_ch, out_ch)
+
+    def forward(self, x1, x2):
+        x1 = self.up(x1)
+
+        diffX = x2.size()[3] - x1.size()[3]
+        diffY = x2.size()[2] - x1.size()[2]
+
+        x2 = F.pad(x2, (-(diffX // 2), -(diffX - diffX // 2),
+                        -(diffY // 2), -(diffY - diffY // 2)))
+        x = torch.cat([x2, x1], dim=1)
+        
         return self.conv(x)

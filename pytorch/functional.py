@@ -57,6 +57,7 @@ def train_epoch(train_loader, accumulator, model, optimizer, criterion, metrics)
     accumulator.metric_scores /= len(train_loader)
 
     accum(accumulator)
+    torch.cuda.empty_cache()
 
 
 
@@ -91,6 +92,7 @@ def validate_epoch(val_loader, accumulator, model, criterion, metrics):
     accumulator.metric_scores /= len(val_loader)
 
     accum(accumulator)
+    torch.cuda.empty_cache()
 
 
 
